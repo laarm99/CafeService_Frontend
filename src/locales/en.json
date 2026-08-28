@@ -1,0 +1,8 @@
+{
+    "trans.welcome" : "Welcome",
+    "dashboard.next" : "Next",
+    "layoutapp.notifications" : "Notifications",
+    "layoutUtems.home":"Home",
+    "layoutapp.logout":"Logout",
+    "dashboard.login" : "Access to continue"
+}

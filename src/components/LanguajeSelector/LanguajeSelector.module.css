@@ -1,0 +1,33 @@
+.selectDesign{
+    width: auto;
+}
+
+
+.selectDesign :global(.ant-select-selector) {
+  border-radius: 20px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding-left: 8px;
+}
+
+
+.languageSelector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 24px;
+  background: #f5f5f5;
+  border: 1px solid #e8e8e8;
+  transition: all 0.3s ease;
+}
+
+.languageSelector:hover {
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+
+.languageSelector svg {
+  font-size: 20px;
+  color: #1677ff;
+}

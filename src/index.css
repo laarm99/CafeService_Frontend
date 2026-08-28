@@ -1,0 +1,129 @@
+body{
+  margin: 0px;
+
+}
+/* .ant-layout{
+  height: 100vh;
+} */
+/* SideBar styles */
+:where(.css-dev-only-do-not-override-d2lrxs).ant-menu-dark, :where(.css-dev-only-do-not-override-d2lrxs).ant-menu-dark>.ant-menu {
+  color: rgba(255, 255, 255, 0.65);
+  background: #0F307D;
+}
+:where(.css-dev-only-do-not-override-d2lrxs).ant-layout .ant-layout-sider {
+background:#0F307D;
+}
+:where(.css-dev-only-do-not-override-d2lrxs).ant-menu-dark .ant-menu-item-selected, :where(.css-dev-only-do-not-override-d2lrxs).ant-menu-dark>.ant-menu .ant-menu-item-selected {
+background-color: #000C29;
+}
+:where(.css-dev-only-do-not-override-d2lrxs).ant-menu .ant-menu-item, :where(.css-dev-only-do-not-override-d2lrxs).ant-menu .ant-menu-submenu, :where(.css-dev-only-do-not-override-d2lrxs).ant-menu .ant-menu-submenu-title {
+border-radius: 0px;
+}
+
+.btn-primary{
+color: #fff !important;
+font-weight: 400;
+font-size: 16px;
+height: 48px !important;
+padding: 0px 16px;
+display: inline-flex;
+justify-content: center;
+align-items: center;
+gap: 8px;
+cursor: pointer;
+width: auto;
+background-color: #0F307D !important;
+background-size: 100% 200%;
+border-width: 0;
+border-color: transparent;
+border-style: solid;
+border-radius: 0;
+}
+.btn-normal{
+color: #0F307D !important;
+font-weight: 400;
+font-size: 16px;
+height: 48px;
+padding: 0px 16px;
+display: inline-flex;
+justify-content: center;
+align-items: center;
+gap: 8px;
+cursor: pointer;
+width: auto;
+background-color: white;
+background-size: 100% 200%;
+border: "1px solid #2727E6 " !important;
+border-radius: 0;
+
+}
+:where(.css-dev-only-do-not-override-d2lrxs).ant-btn-default {
+
+border-color: #0F307D ;
+
+}
+.btn-primary:hover{
+background-color: #2C2CFF !important;
+}
+.line-gradient{
+height: 8px;
+background: linear-gradient(to right, #2727E6, #0F307D);
+
+}
+
+:where(.css-dev-only-do-not-override-d2lrxs).ant-table-wrapper .ant-table-thead >tr>th{
+border-bottom: 1px solid #bdbdbd !important;
+background-color: white;
+}
+.ant-table-cell{
+border-bottom: 0.1px solid #bdbdbd !important;
+}
+.ant-input{
+background-color: #F0F0F0;
+border-radius: 0px;
+border: 0;
+border-bottom: .0625rem solid #bdbdbd;
+color: black;
+height: 48px;
+padding: 0 1rem;
+width: 100%;
+}
+.ant-select-selector{
+background-color: #F0F0F0 !important;
+height: 48px ;
+border-radius: 0px !important;
+padding: 1rem !important;
+}
+tr:nth-child(odd) {
+background-color: rgba(0, 0, 0, 0.02);
+}
+
+tr:nth-child(even) {
+background-color: #ffffff;
+}
+.notification-button{
+ background-color: white;
+ border-radius: 100%;
+ border: transparent;
+
+}
+:where(.css-dev-only-do-not-override-d2lrxs).ant-btn-default {
+background: #ffffffa2;
+border-color: #d9d9d9;
+color: rgba(0, 0, 0, 0.88);
+box-shadow: 0 0px 0 rgba(0, 0, 0, 0.02);
+}
+.save-cancel-btns{
+display: flex;
+justify-content: end;
+}
+.btn-download{
+height: 30px;
+width: 30px;
+border-radius: 100%;
+background-color: green;
+}
+.menu-notifications{
+overflow: scroll;
+max-height: 90vh;
+}

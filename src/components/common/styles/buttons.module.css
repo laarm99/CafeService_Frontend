@@ -1,0 +1,110 @@
+.appButton {
+    width: auto;
+    height: 40px;
+
+    letter-spacing: 0.3px;
+    font-weight: 600;
+
+    /* font-size: 18px; */
+    font-weight: 600;
+
+
+
+    position: relative;
+    overflow: hidden;
+
+    border: none !important;
+    border-radius: 30px;
+
+    /* background:var(--start-color) !important; */
+
+    background: linear-gradient(80deg,
+            var(--start-color),
+            var(--end-color)) !important;
+
+
+    color: white !important;
+
+    box-shadow: 0 6px 15px rgba(0, 0, 0, .20);
+
+    transition:
+        transform .25s ease,
+        box-shadow .25s ease;
+
+}
+
+/* Capa que "pinta" el botón */
+
+.appButton::after {
+
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+    left: 0;
+
+    width: 0%;
+    height: 100%;
+
+    /* background:var(--start-color) !important; */
+
+    background: linear-gradient(80deg,
+            var(--end-color),
+            var(--start-color));
+
+    transition: width .35s ease;
+
+    z-index: 0;
+
+}
+
+/* Texto e icono encima */
+
+.appButton span {
+
+    position: relative;
+
+    z-index: 2;
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+}
+
+/* Hover */
+
+.appButton:hover {
+
+    transform: translateY(-2px);
+
+    /* box-shadow:0 12px 25px rgba(0,0,0,.28); */
+
+    box-shadow:
+        0 12px 25px rgba(0, 0, 0, .28),
+        0 0 0 3px rgba(255, 255, 255, 0.35);
+
+
+}
+
+/* El color va llenando */
+
+.appButton:hover::after {
+
+    width: 100%;
+
+}
+
+/* Click */
+
+.appButton:active {
+    transform: translateY(0) scale(.97);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, .20);
+
+}
+
+
+.appButton .anticon {
+    font-size: 60px;
+}

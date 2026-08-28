@@ -1,0 +1,8 @@
+{
+    "trans.welcome" : "Bienvenido",
+    "dashboard.next" : "Siguiente",
+    "layoutapp.notifications" : "Notificaciones",
+    "layoutUtems.home":"Inicio",
+    "layoutapp.logout":"Cerrar sesion",
+    "dashboard.login" : "Accede para continuar"
+}
