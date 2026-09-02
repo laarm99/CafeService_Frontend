@@ -68,7 +68,7 @@ export default function AppLayout() {
 
         <Header className={styles.headerStyle}>
 
-          <h3>APP_NAME</h3>
+          <h1>Formato Multiple</h1>
 
         </Header>
 

@@ -1,5 +1,5 @@
 
-import { HomeFilled, UserOutlined } from "@ant-design/icons";
+import { FileAddOutlined, FileDoneOutlined, HomeFilled, UserOutlined } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 
 export const getModuleItems = (t) => [
@@ -10,7 +10,12 @@ export const getModuleItems = (t) => [
   },
   {
     key: "2",
-    icon: <UserOutlined />,
-    label: <Link to="/fooPage">Foo</Link>,
+    icon: <FileAddOutlined />,
+    label: <Link to="/add-requisition">Nuevo Formato Multiple</Link>,
+  },
+  {
+    key: "3",
+    icon: <FileDoneOutlined />,
+    label: <Link to="/requisition">Lista de Formatos Multiples</Link>,
   },
 ];

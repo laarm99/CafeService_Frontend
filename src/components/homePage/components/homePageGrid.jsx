@@ -1,4 +1,4 @@
-import { App, Button, Card } from "antd";
+import { App, Button, Card, Form } from "antd";
 import { useEffect } from "react";
 import { getAll } from "../api/homePageGridAPI";
 import { notifyError, notifySuccess } from "../../../services/notificationService";
@@ -13,21 +13,23 @@ export default function HomePageGrid() {
 
     useEffect(() => {
         getAll()
-            .then((res) => {
-                console.log("LLEGUE THEN", res.data);
+            .then((res) => {                
                 notifySuccess("eureka");
             })
-            .catch((err) => {
-                console.log("LLEGUE CATCH", err);
+            .catch((err) => {                
                 notifyError('err');
             });
     }, []);
 
     return (
         <>
-            <Card title="Dashboard">
-                {t("trans.welcome")}
+            <Card title="Requisiciones">
+                <Form>
+                    
+                </Form>
+
             </Card>
+
             <div className={style["divButton"]}>
                 <AppButton
                     title={t("dashboard.next")}
