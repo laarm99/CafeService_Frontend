@@ -7,13 +7,15 @@ import styles from "../styles/MultiFormatForm.module.css";
 export default function ChangeDepOrShift({ employee = null }) {
     const { t } = useTranslation();
 
+    // Deshabilitado pero legible: la clase readOnlyInput oscurece el texto
+    // que Ant Design pinta en gris tenue por defecto.
     const readOnlyValue = (value) => (
         <Input
             value={value ?? ""}
             readOnly
             disabled
             style={{ width: "100%" }}
-            className={styles.modernInput}
+            className={`${styles.modernInput} ${styles.readOnlyInput}`}
         />
     );
 

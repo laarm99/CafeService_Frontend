@@ -145,6 +145,7 @@
   height: 44px !important;
   box-shadow: none !important;
   transition: all .2s;
+  color: black;
 }
 
 .modernCardEmployeData :global(.ant-input:hover),
@@ -184,4 +185,28 @@
     background: #eeeeee;
     border-color: #fb8421;
     color: #374151;
+}
+
+/* Campos de solo lectura (Datos Actuales).
+   Siguen deshabilitados, pero el texto se lee en oscuro
+   en lugar del gris tenue que pone Ant Design por defecto. */
+.readOnlyInput :global(.ant-input[disabled]),
+.readOnlyInput :global(.ant-input-disabled),
+.readOnlyInput :global(input[disabled]) {
+  color: #162852 !important;
+  font-weight: 600;
+
+  background: #eef2f8 !important;
+  border: 1px solid #dbe3ef !important;
+
+  /* Safari / iOS aclaran el texto de los campos deshabilitados */
+  -webkit-text-fill-color: #162852 !important;
+  opacity: 1 !important;
+
+  cursor: default;
+}
+
+.readOnlyInput :global(.ant-input[disabled]:hover),
+.readOnlyInput :global(.ant-input-disabled:hover) {
+  border-color: #dbe3ef !important;
 }
