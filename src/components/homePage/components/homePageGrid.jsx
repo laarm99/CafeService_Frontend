@@ -1,46 +1,45 @@
-import { App, Button, Card, Form } from "antd";
-import { useEffect } from "react";
-import { getAll } from "../api/homePageGridAPI";
-import { notifyError, notifySuccess } from "../../../services/notificationService";
-import AppButton from "../../common/buttons";
-import { RightCircleFilled, RightOutlined } from "@ant-design/icons";
-import style from "../styles/homePageGrid.module.css"
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
+import { getHomeModules, getModuleColors } from "../../../layout/modules";
+import styles from "../styles/homePageGrid.module.css";
 
-
+// Accesos rapidos del home.
+// Se generan desde la misma definicion que el menu lateral, con un grid
+// auto-fill: al agregar un modulo, el boton aparece y se reacomoda solo.
 export default function HomePageGrid() {
     const { t } = useTranslation();
+    const navigate = useNavigate();
 
-    useEffect(() => {
-        getAll()
-            .then((res) => {                
-                notifySuccess("eureka");
-            })
-            .catch((err) => {                
-                notifyError('err');
-            });
-    }, []);
+    const modules = getHomeModules();
 
     return (
-        <>
-            <Card title="Requisiciones">
-                <Form>
-                    
-                </Form>
+        <div className={styles.homeWrapper}>
+            <h2 className={styles.homeTitle}>{t("homePage.title")}</h2>
 
-            </Card>
+            <div className={styles.moduleGrid}>
+                {modules.map((module, index) => {
+                    const { startColor, endColor } = getModuleColors(module, index);
+                    const Icon = module.icon;
 
-            <div className={style["divButton"]}>
-                <AppButton
-                    title={t("dashboard.next")}
-                    icon={<RightCircleFilled style={{ fontSize: 25 }} />}
-                    startColor="#fb8421"
-                    endColor="#162852"
-                    loading={false}
-                    disabled={false}
-                    onClick={() => notifySuccess("Clic")}
-                />
+                    return (
+                        <button
+                            key={module.key}
+                            type="button"
+                            className={styles.moduleTile}
+                            style={{
+                                "--start-color": startColor,
+                                "--end-color": endColor,
+                            }}
+                            onClick={() => navigate(module.path)}
+                        >
+                            <span className={styles.tileContent}>
+                                <Icon className={styles.tileIcon} />
+                                <span className={styles.tileLabel}>{t(module.labelKey)}</span>
+                            </span>
+                        </button>
+                    );
+                })}
             </div>
-        </>
+        </div>
     );
 }

@@ -1,214 +1,262 @@
 import { useEffect, useState } from "react";
-import { getAll } from "../api/MultiFormatApi";
-import displayError from "../../../Utils/display-errors";
-import { Button, Card, Col, DatePicker, Flex, Form, Input, InputNumber, Radio, Row, Select, Tabs, TimePicker, Typography } from "antd";
-import styles from "../styles/MultiFormatForm.module.css"
-import AppButton from "../../common/buttons";
-import { useTranslation } from "react-i18next";
-import { AndroidOutlined, AppleOutlined, FileProtectOutlined, FileTextOutlined, HeartOutlined, RightCircleFilled, SunOutlined, SwapLeftOutlined, SwapOutlined } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
+import { Card, Col, DatePicker, Form, Popconfirm, Row, Skeleton, Tabs, Typography } from "antd";
+import {
+    FileProtectOutlined,
+    FileTextOutlined,
+    SendOutlined,
+    SunOutlined,
+    SwapOutlined,
+} from "@ant-design/icons";
 import dayjs from "dayjs";
+import { useTranslation } from "react-i18next";
+
+import styles from "../styles/MultiFormatForm.module.css";
+import AppButton from "../../common/buttons";
 import ChangeDepOrShift from "./ChangeDepOrShifForm";
 import VacationsForm from "./VacationForm";
 import PermissionForm from "./PermissionForm";
 
+import { getById, getCurrentEmployee } from "../api/MultiFormatApi";
+import { toFormValues } from "../mappers/multiFormat.mapper";
+import useMultiFormatSubmit from "../hooks/useMultiFormatSubmit";
+import displayError from "../../../utils/display-errors";
 
-export default function MultiFormatForm() {
+// La pestaña activa define el tipo de movimiento que se manda al backend.
+const MOVEMENT_TYPE_BY_TAB = {
+    "1": "CHANGE_DEP_SHIFT",
+    "2": "VACATION",
+    "3": "PERMISSION",
+};
+
+const DISPLAY_DATE = "DD/MM/YYYY";
+
+export default function MultiFormatForm({ id = null }) {
     const { t } = useTranslation();
-    const [foos, setFoos] = useState([]);
+    const navigate = useNavigate();
+    const [form] = Form.useForm();
+
+    const [employee, setEmployee] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState("1");
+
+    const { submit, submitting, isEdit } = useMultiFormatSubmit({
+        form,
+        id,
+        // Al enviar, se redirige al detalle del formato recien creado
+        redirectTo: (record) => (record?.id ? `/multiFormat/${record.id}` : "/multiFormat"),
+    });
+
+    // Carga los datos del empleado y, en modo edicion, el formato existente.
     useEffect(() => {
-        getAll()
-            .then((res) => {
-                setFoos(res.data);
-            })
-            .catch((err) => {
-                displayError(err);
-            })
-    }, []);
+        let cancelled = false;
 
-    const options = [
-        { label: 'Apple', value: 'Apple' },
-        { label: 'Pear', value: 'Pear' },
-        { label: 'Orange', value: 'Orange' },
-    ];
-    return (<>
-        <Card title={
-            <div className={styles.cardHeader}>
-                <div>
-                    <h2>
-                        <FileTextOutlined className={styles.headerIcon} />
-                        Crear Nuevo
-                    </h2>
-                </div>
-            </div>
+        async function load() {
+            setLoading(true);
+            try {
+                const employeeResponse = await getCurrentEmployee();
+                if (cancelled) return;
+                setEmployee(employeeResponse.data);
+
+                if (id) {
+                    const recordResponse = await getById(id);
+                    if (cancelled) return;
+                    const record = recordResponse.data;
+
+                    // Un formato ya enviado no puede modificarse: se manda al detalle
+                    if (record?.status) {
+                        navigate(`/multiFormat/${id}`, { replace: true });
+                        return;
+                    }
+
+                    const values = toFormValues(record);
+                    form.setFieldsValue(values);
+
+                    const tab = Object.keys(MOVEMENT_TYPE_BY_TAB).find(
+                        (key) => MOVEMENT_TYPE_BY_TAB[key] === values.movementType
+                    );
+                    if (tab) setActiveTab(tab);
+                }
+            } catch (err) {
+                if (!cancelled) displayError(err);
+            } finally {
+                if (!cancelled) setLoading(false);
+            }
         }
-            className={styles.modernCard}>
-            <Form
-                layout="vertical"
-                style={{ width: "100%" }}
-            >
-                <Card className={styles.modernCardEmployeData} title="Datos de empleado">
 
-                    <div className={styles.cardHeader}>
-                        <Row gutter={16}>
-                            <Col span={24}>
-                                <Typography.Text strong>
-                                    Fecha actual:
-                                </Typography.Text>
-                                <Typography.Text type="secondary" style={{ marginLeft: 6 }}>
-                                    {' '}02/09/2026
-                                </Typography.Text>
-                            </Col>
-                        </Row>
+        load();
+        return () => {
+            cancelled = true;
+        };
+    }, [id, form, navigate]);
 
-                        <br />
+    const handleFinish = (values) => {
+        // Se envia lo capturado en la pestaña activa mas los datos del empleado.
+        submit({
+            ...values,
+            movementType: MOVEMENT_TYPE_BY_TAB[activeTab],
+            clockNumber: employee?.clockNumber,
+            netkey: employee?.netkey,
+            fullName: employee?.fullName,
+        });
+    };
 
-                        <Row gutter={2}>
-                            <Col xs={24} md={3}>
-                                <Form.Item label="# de Reloj">
-                                    <Input style={{ width: "100%" }} className={styles.modernInput} />
-                                </Form.Item>
-                            </Col>
-                            <Col xs={24} md={7}>
-                                <Form.Item label="Nombre de Empleado">
-                                    <Input style={{ width: "100%" }} className={styles.modernInput} />
-                                </Form.Item>
-                            </Col>
-                            <Col xs={24} md={7}>
-                                <Form.Item label="Puesto Actual">
-                                    <Input style={{ width: "100%" }} className={styles.modernInput} />
-                                </Form.Item>
-                            </Col>
-                            <Col xs={24} md={7}>
-                                <Form.Item label="Departamento">
-                                    <Input style={{ width: "100%" }} className={styles.modernInput} />
-                                </Form.Item>
-                            </Col>
-                        </Row>
-
-                        <Row gutter={2}>
-                            <Col xs={24} md={12}>
-                                <Form.Item label="Fecha de ingreso">
-                                    <Input style={{ width: "100%" }} className={styles.modernInput} />
-                                </Form.Item>
-                            </Col>
-                            <Col xs={24} md={12}>
-                                <Form.Item label="Fecha efectiva del movimiento">
-                                    <Input style={{ width: "100%" }} className={styles.modernInput} />
-                                </Form.Item>
-                            </Col>
-                        </Row>
-
+    return (
+        <Card
+            title={
+                <div className={styles.cardHeader}>
+                    <div>
+                        <h2>
+                            <FileTextOutlined className={styles.headerIcon} />
+                            {isEdit ? t("multiFormat.title.edit") : t("multiFormat.title.create")}
+                        </h2>
                     </div>
-                </Card>
+                </div>
+            }
+            className={styles.modernCard}
+        >
+            <Skeleton active loading={loading} paragraph={{ rows: 6 }}>
+                <Form
+                    form={form}
+                    layout="vertical"
+                    style={{ width: "100%" }}
+                    onFinish={handleFinish}
+                    initialValues={{ permissionType: 1 }}
+                >
+                    <Card
+                        className={styles.modernCardEmployeData}
+                        title={t("multiFormat.employee.section")}
+                    >
+                        <div className={styles.cardHeader}>
+                            <Row gutter={16}>
+                                <Col span={24}>
+                                    <Typography.Text strong>
+                                        {t("multiFormat.employee.currentDate")}
+                                    </Typography.Text>
+                                    <Typography.Text type="secondary" style={{ marginLeft: 6 }}>
+                                        {dayjs().format(DISPLAY_DATE)}
+                                    </Typography.Text>
+                                </Col>
+                            </Row>
 
-                <br />
+                            <br />
 
-                <Card className={styles.modernCardEmployeData} title="Tipo de movimiento">                   
-                    <Tabs
-                        defaultActiveKey="1
-                        "
-                        items={[
-                            { key: '1', label: 'CAMBIO DEP. Y/O TURNO', children: <ChangeDepOrShift/>, icon: <SwapOutlined /> },
-                            { key: '2', label: 'VACACIONES', children: <VacationsForm />, icon: <SunOutlined /> },
-                            { key: '3', label: 'PERMISO', children: <PermissionForm />, icon: <FileProtectOutlined /> },
-                        ]}
-                    />
-                </Card>
+                            <Row gutter={16}>
+                                <Col xs={24} md={3}>
+                                    <Form.Item label={t("multiFormat.employee.clockNumber")}>
+                                        <Typography.Text>{employee?.clockNumber ?? "-"}</Typography.Text>
+                                    </Form.Item>
+                                </Col>
 
-                {/* 
-                <Form.Item label="Evento">
-                    <Input className={styles.modernInput} />
-                </Form.Item>
+                                <Col xs={24} md={7}>
+                                    <Form.Item label={t("multiFormat.employee.fullName")}>
+                                        <Typography.Text>{employee?.fullName ?? "-"}</Typography.Text>
+                                    </Form.Item>
+                                </Col>
 
-                <Row gutter={16}>
-                    <Col xs={24} md={12}>
-                        <Form.Item label="Fecha">
-                            <DatePicker
-                                className={styles.modernInput}
-                                style={{ width: "100%" }}
-                            />
-                        </Form.Item>
-                    </Col>
+                                <Col xs={24} md={5}>
+                                    <Form.Item label={t("multiFormat.employee.position")}>
+                                        <Typography.Text>{employee?.position ?? "-"}</Typography.Text>
+                                    </Form.Item>
+                                </Col>
 
-                    <Col xs={24} md={12}>
-                        <Form.Item label="Hora">
-                            <TimePicker
-                                className={styles.modernInput}
-                                style={{ width: "100%" }}
-                            />
-                        </Form.Item>
-                    </Col>
-                </Row>
+                                <Col xs={24} md={5}>
+                                    <Form.Item label={t("multiFormat.employee.department")}>
+                                        <Typography.Text>{employee?.department ?? "-"}</Typography.Text>
+                                    </Form.Item>
+                                </Col>
 
-                <Row gutter={16}>
-                    <Col xs={24} md={12}>
-                        <Form.Item label="Planta">
-                            <Select
-                                className={styles.modernInput}
-                                options={[{ label: "J1", value: 1 }]}
-                            />
-                        </Form.Item>
-                    </Col>
+                                <Col xs={24} md={4}>
+                                    <Form.Item label={t("multiFormat.employee.hireDate")}>
+                                        <Typography.Text>
+                                            {employee?.hireDate
+                                                ? dayjs(employee.hireDate).format(DISPLAY_DATE)
+                                                : "-"}
+                                        </Typography.Text>
+                                    </Form.Item>
+                                </Col>
+                            </Row>
 
-                    <Col xs={24} md={12}>
-                        <Form.Item label="Lugar">
-                            <Input className={styles.modernInput} />
-                        </Form.Item>
-                    </Col>
-                </Row>
+                            <div style={{ justifyItems: "center" }}>
+                                <Row gutter={16}>
+                                    <Col xs={24} md={24}>
+                                        <Form.Item
+                                            label={t("multiFormat.effectiveDate.label")}
+                                            name="effectiveDate"
+                                            rules={[
+                                                {
+                                                    required: true,
+                                                    message: t("multiFormat.effectiveDate.required"),
+                                                },
+                                            ]}
+                                        >
+                                            <DatePicker
+                                                format={DISPLAY_DATE}
+                                                style={{ width: "auto" }}
+                                                className={styles.modernInput}
+                                            />
+                                        </Form.Item>
+                                    </Col>
+                                </Row>
+                            </div>
+                        </div>
+                    </Card>
 
-                <Row gutter={16}>
-                    <Col xs={24} md={12}>
-                        <Form.Item label="# de asistentes">
-                            <InputNumber
-                                className={styles.modernInput}
-                                style={{ width: "100%" }}
-                            />
-                        </Form.Item>
-                    </Col>
+                    <br />
 
-                    <Col xs={24} md={12}>
-                        <Form.Item label="Justificación">
-                            <Input className={styles.modernInput} />
-                        </Form.Item>
-                    </Col>
-                </Row>
+                    <Card
+                        className={styles.modernCardEmployeData}
+                        title={t("multiFormat.movement.section")}
+                    >
+                        <Tabs
+                            activeKey={activeTab}
+                            onChange={setActiveTab}
+                            items={[
+                                {
+                                    key: "1",
+                                    label: t("multiFormat.movement.CHANGE_DEP_SHIFT"),
+                                    children: <ChangeDepOrShift employee={employee} />,
+                                    icon: <SwapOutlined />,
+                                },
+                                {
+                                    key: "2",
+                                    label: t("multiFormat.movement.VACATION"),
+                                    children: <VacationsForm />,
+                                    icon: <SunOutlined />,
+                                },
+                                {
+                                    key: "3",
+                                    label: t("multiFormat.movement.PERMISSION"),
+                                    children: <PermissionForm />,
+                                    icon: <FileProtectOutlined />,
+                                },
+                            ]}
+                        />
+                    </Card>
+                </Form>
 
-                <Row gutter={16}>
-                    <Col xs={24} md={12}>
-                        <Form.Item label="Persona que autoriza">
-                            <Select
-                                className={styles.modernInput}
-                                options={[{ label: "Demo", value: "demo" }]}
-                            />
-                        </Form.Item>
-                    </Col>
-
-                    <Col xs={24} md={12}>
-                        <Form.Item label="Cargar a cuenta">
-                            <Select
-                                className={styles.modernInput}
-                                options={[{ label: "STAFF", value: 2 }]}
-                            />
-                        </Form.Item>
-                    </Col>
-                </Row> */}
-            </Form>
-
-            <div className={styles["divButton"]}>
-                <AppButton
-                    title={t("dashboard.next")}
-                    icon={<RightCircleFilled style={{ fontSize: 25 }} />}
-                    startColor="#fb8421"
-                    endColor="#162852"
-                    loading={false}
-                    disabled={false}
-                    onClick={() => notifySuccess("Clic")}
-                />
-            </div>
-
+                {/* Enviar al aprobador. Mientras no se confirme, el usuario
+                    puede seguir modificando el formato. */}
+                <div className={styles["divButton"]}>
+                    <Popconfirm
+                        title={t("multiFormat.send.confirmTitle")}
+                        description={t("multiFormat.send.confirmDescription")}
+                        okText={t("multiFormat.send.confirmOk")}
+                        cancelText={t("multiFormat.send.confirmCancel")}
+                        placement="topRight"
+                        onConfirm={() => form.submit()}
+                    >
+                        <AppButton
+                            title={t("multiFormat.send.action")}
+                            icon={<SendOutlined style={{ fontSize: 22 }} />}
+                            startColor="#fb8421"
+                            endColor="#162852"
+                            loading={submitting}
+                            disabled={submitting}
+                        />
+                    </Popconfirm>
+                </div>
+            </Skeleton>
         </Card>
-
-
-    </>);
+    );
 }

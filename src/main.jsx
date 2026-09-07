@@ -6,15 +6,13 @@ import LoginPage from './pages/login/LoginPage.jsx'
 import ProtectedRouteComponent from './pages/login/ProtectedRouteComponent.jsx'
 import AuthProvider from './pages/login/AuthProvider.jsx'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import MultiFormatPage from './pages/multiFormatPage'
 import HomePage from './pages/homePage/index.jsx'
+import MultiFormatGridPage from './pages/multiFormatPage/index.jsx'
+import MultiFormatDetailPage from './pages/multiFormatPage/[multiFormatId].jsx'
+import MultiFormatFormPage from './pages/addMultiFormatPage/index.jsx'
 import { App } from 'antd'
 import AppErrorBoundary from "./common/components/ErrorBoundary/AppErrorBoundary";
 import "./i18n.js"
-import styles from "../src/pages/login/styles/LoginPage.module.css"
-//import RequisitionGridPage from './pages/requisition/[requisitionId].jsx'
-import MultiFormatGrid from './components/multiFormat/components/MultiFormatGrid.jsx'
-import MultiFormatForm from './components/multiFormat/components/MultiFormatForm.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -32,29 +30,38 @@ createRoot(document.getElementById('root')).render(
                 </ProtectedRouteComponent>
               } >
 
+                <Route index element={<Navigate to="/homePage" replace />} />
+
                 <Route
                   path="/homePage"
                   element={<HomePage />}
                 />
 
+                {/* Formato Multiple */}
                 <Route
-                  path="/requisition"
-                  element={<MultiFormatGrid />}
+                  path="/multiFormat"
+                  element={<MultiFormatGridPage />}
                 />
 
-                {/* <Route
-                  path="/requisition/:id"
-                  element={<RequisitionGridPage />}
-                />                 */}
-
                 <Route
-                  path="/add-requisition"
-                  element={<MultiFormatForm />}
+                  path="/multiFormat/new"
+                  element={<MultiFormatFormPage />}
                 />
 
-               
+                <Route
+                  path="/multiFormat/:multiFormatId"
+                  element={<MultiFormatDetailPage />}
+                />
+
+                {/* Rutas anteriores: se conservan como redireccion para no romper enlaces guardados */}
+                <Route path="/requisition" element={<Navigate to="/multiFormat" replace />} />
+                <Route path="/add-requisition" element={<Navigate to="/multiFormat/new" replace />} />
 
               </Route>
+
+              {/* Cualquier otra ruta cae al inicio */}
+              <Route path="*" element={<Navigate to="/homePage" replace />} />
+
             </Routes>
           </AuthProvider>
         </BrowserRouter>

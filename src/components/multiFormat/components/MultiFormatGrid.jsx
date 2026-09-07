@@ -1,19 +1,17 @@
-import { Flex, Space, Table, Tag } from "antd";
 import DefaultTable from "../../common/defaultTable";
-import useRequisitionColumns from "../hooks/useMultiformatColumns";
+import useMultiFormatColumns from "../hooks/useMultiformatColumns";
 import useMultiFormatData from "../hooks/useMultiFormatData";
 
 export default function MultiFormatGrid() {
 
-    const { columns } = useRequisitionColumns();
-    const { dataSource } = useMultiFormatData();
-    
+    const { columns } = useMultiFormatColumns();
+    const { dataSource, loading } = useMultiFormatData();
+
     return (
-        <>
-            <DefaultTable
-                columns={columns}
-                data={dataSource}
-            />
-        </>
-    )
+        <DefaultTable
+            columns={columns}
+            data={dataSource}
+            loading={loading}
+        />
+    );
 }

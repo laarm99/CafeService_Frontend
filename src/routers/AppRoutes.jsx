@@ -1,10 +1,9 @@
-
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import HomePage from "../pages/homePage";
-//import { Layout } from "antd";
 import App from "../layout/LayoutApp";
-import RequisitionGridPage from "../pages/requisition/[requisitionId]";
-
+import HomePage from "../pages/homePage";
+import MultiFormatGridPage from "../pages/multiFormatPage";
+import MultiFormatDetailPage from "../pages/multiFormatPage/[multiFormatId]";
+import MultiFormatFormPage from "../pages/addMultiFormatPage";
 
 function AppRoutes() {
   return (
@@ -13,15 +12,13 @@ function AppRoutes() {
 
         <Route path="/" element={<App />}>
 
-          <Route
-            index
-            element={<HomePage />}
-          />
+          <Route index element={<HomePage />} />
 
-          <Route
-          path="requisition/:id"
-          element={<RequisitionGridPage/>}
-          />
+          <Route path="multiFormat" element={<MultiFormatGridPage />} />
+
+          <Route path="multiFormat/new" element={<MultiFormatFormPage />} />
+
+          <Route path="multiFormat/:multiFormatId" element={<MultiFormatDetailPage />} />
 
         </Route>
 

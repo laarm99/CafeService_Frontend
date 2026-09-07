@@ -1,16 +1,10 @@
-import Sider from "antd/es/layout/Sider";
-import { useContext, useState } from 'react'
+import { useContext } from 'react'
 import { AuthContext } from "../pages/login/AuthProvider";
-import { Row, Space, Col, App } from 'antd'
-import { Button, Layout, Menu, theme } from 'antd';
-import { Link, Outlet } from 'react-router-dom';
+import { App } from 'antd'
+import { Layout } from 'antd';
+import { Outlet } from 'react-router-dom';
 import { Content, Header } from "antd/es/layout/layout";
-import {
-  LogoutOutlined,
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
-  UserOutlined,
-} from '@ant-design/icons';
+import { LogoutOutlined } from '@ant-design/icons';
 import { setMessageApi } from "../services/notificationService";
 import wernerLogo from "../assets/img/logo.png";
 import styles from "../layout/styles/LayoutApp.module.css"
@@ -19,15 +13,13 @@ import AppButton from "../components/common/buttons";
 import { useTranslation } from "react-i18next";
 import { getModuleItems } from "./LayoutItems.jsx";
 import LayoutSider from "./LayoutSider.jsx";
+import AppBreadcrumb from "./AppBreadcrumb.jsx";
 
 export default function AppLayout() {
   const { t } = useTranslation();
   const { logout } = useContext(AuthContext);
   const { message } = App.useApp();
   setMessageApi(message);
-  const {
-    token: { colorBgContainer, borderRadiusLG },
-  } = theme.useToken();
   const moduleItems = getModuleItems(t);
 
   return (
@@ -68,13 +60,14 @@ export default function AppLayout() {
 
         <Header className={styles.headerStyle}>
 
-          <h1>Formato Multiple</h1>
+          <h1>{t("app.title")}</h1>
 
         </Header>
 
         <Content
           className={styles.contentDesign}
         >
+          <AppBreadcrumb />
           <Outlet />
         </Content>
       </Layout>
@@ -82,4 +75,3 @@ export default function AppLayout() {
     </Layout>
   );
 }
-

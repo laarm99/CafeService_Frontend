@@ -1,0 +1,29 @@
+.breadcrumbBar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    padding: 4px 4px 14px;
+    font-size: 14px;
+}
+
+/* Flecha de retorno: discreta, con el mismo acento naranja al pasar el mouse */
+.backButton {
+    color: #162852;
+    transition: color .2s ease, background-color .2s ease, transform .2s ease;
+}
+
+.backButton:hover {
+    color: #fb8421 !important;
+    background-color: rgba(251, 132, 33, .10) !important;
+    transform: translateX(-2px);
+}
+
+.breadcrumbBar :global(.ant-breadcrumb a),
+.breadcrumbBar :global(.ant-breadcrumb li:last-child) {
+    font-weight: 500;
+}
+
+.breadcrumbBar :global(.ant-breadcrumb a:hover) {
+    color: #fb8421;
+}

@@ -1,51 +1,68 @@
 import { EyeFilled } from "@ant-design/icons";
-import { Button, Flex, Space, Tag } from "antd";
-import RequisitionForm from "../components/MultiFormatForm";
+import { Button, Flex, Space, Tag, Tooltip } from "antd";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
+// El backend/mock manda codigos; el texto visible se resuelve con i18next.
+const STATUS_COLORS = {
+    SUBMITTED: 'blue',
+    APPROVED: 'green',
+    REJECTED: 'red',
+    IN_REVIEW: 'blue',
+    PENDING: 'orange',
+};
 
-export default function useRequisitionColumns() {
+export default function useMultiFormatColumns() {
     const navigate = useNavigate();
+    const { t } = useTranslation();
 
     const columns = [
         {
-            title: 'Id formato',
+            title: t('multiFormat.grid.id'),
             dataIndex: 'id',
             key: 'id',
-            // render: text => <a>{text}</a>,
         },
         {
-            title: 'Fecha de creacion',
+            title: t('multiFormat.grid.createdAt'),
             dataIndex: 'createdAt',
             key: 'createdAt',
         },
         {
-            title: 'Nombre',
+            title: t('multiFormat.grid.fullName'),
             dataIndex: 'fullName',
             key: 'fullName',
         },
         {
-            title: 'Netkey',
+            title: t('multiFormat.grid.netkey'),
             dataIndex: 'netkey',
             key: 'netkey',
         },
         {
-            title: 'Tipo de formato',
-            dataIndex: 'type',
-            key: 'type',
+            title: t('multiFormat.grid.type'),
+            dataIndex: 'movementType',
+            key: 'movementType',
+            render: (movementType) => (
+                movementType ? t(`multiFormat.movement.${movementType}`) : '-'
+            ),
         },
         {
-            title: 'Estatus',
+            title: t('multiFormat.grid.approver'),
+            dataIndex: 'approver',
+            key: 'approver',
+            render: (approver) => approver?.name ?? '-',
+        },
+        {
+            title: t('multiFormat.grid.status'),
             key: 'status',
             dataIndex: 'status',
             render: (status) => {
-
-                const color = status.toUpperCase() === 'APROBADO' ? 'green' : status.toUpperCase() === 'RECHAZADO' ? 'red' : 'orange';
+                if (!status) return null;
+                const color = STATUS_COLORS[status] ?? 'orange';
 
                 return (
                     <Flex gap="small" align="center" wrap>
                         <Tag color={color}>
-                            {status?.toUpperCase()}
+                            {t(`multiFormat.status.${status}`).toUpperCase()}
                         </Tag>
                     </Flex>
                 );
@@ -55,11 +72,13 @@ export default function useRequisitionColumns() {
             title: '',
             key: 'action',
             render: (_, record) => (
-                <Space size="medium">
-                    <Button
-                        icon={<EyeFilled />}
-                        //onClick={() => navigate(`/requisition/${record.id}`)}
-                    />
+                <Space size="middle">
+                    <Tooltip title={t('multiFormat.grid.view')}>
+                        <Button
+                            icon={<EyeFilled />}
+                            onClick={() => navigate(`/multiFormat/${record.id}`)}
+                        />
+                    </Tooltip>
                 </Space>
             ),
         },

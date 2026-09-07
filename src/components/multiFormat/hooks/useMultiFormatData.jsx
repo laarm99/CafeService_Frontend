@@ -1,57 +1,70 @@
-export default function useMultiFormatData(){
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { getAll, remove as removeRequest } from '../api/MultiFormatApi';
+import { toRow } from '../mappers/multiFormat.mapper';
+import displayError from '../../../utils/display-errors';
+import { notifySuccess } from '../../../utils/messages';
 
-    const dataSource = [
-        {
-            key: '1',
-            id: 1,
-            createdAt: '2024-01-15',
-            fullName: 'Juan Pérez',
-            netkey: 'jperez01',
-            type: 'Alta',
-            status: 'Pendiente',
-            tags: ['pendiente'],
-        },
-        {
-            key: '2',
-            id: 2,
-            createdAt: '2024-01-18',
-            fullName: 'María González',
-            netkey: 'mgonza02',
-            type: 'Modificación',
-            status: 'Aprobado',
-            tags: ['aprobado'],
-        },
-        {
-            key: '3',
-            id: 3,
-            createdAt: '2024-01-20',
-            fullName: 'Carlos Ramírez',
-            netkey: 'cramir03',
-            type: 'Baja',
-            status: 'Rechazado',
-            tags: ['rechazado'],
-        },
-        {
-            key: '4',
-            id: 4,
-            createdAt: '2024-01-22',
-            fullName: 'Ana López',
-            netkey: 'alopez04',
-            type: 'Alta',
-            status: 'En revisión',
-            tags: ['revision'],
-        },
-        {
-            key: '5',
-            id: 5,
-            createdAt: '2024-01-25',
-            fullName: 'Luis Martínez',
-            netkey: 'lmarti05',
-            type: 'Modificación',
-            status: 'aprobado',
-            tags: ['aprobado'],
-        },
-    ];
+// Reemplaza al hook que devolvia el arreglo hardcodeado.
+// Conserva la firma anterior ({ dataSource }) y agrega loading, error,
+// refresh y removeRecord.
+export default function useMultiFormatData(params) {
+    const { t } = useTranslation();
+    const [dataSource, setDataSource] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
 
-    return { dataSource };
+    // Evita setState sobre un componente desmontado (StrictMode / navegacion rapida)
+    const isMounted = useRef(true);
+    useEffect(() => {
+        isMounted.current = true;
+        return () => {
+            isMounted.current = false;
+        };
+    }, []);
+
+    const paramsKey = JSON.stringify(params ?? {});
+
+    const fetchData = useCallback(async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await getAll(JSON.parse(paramsKey));
+            if (!isMounted.current) return;
+            const rows = Array.isArray(response?.data)
+                ? response.data
+                : (response?.data?.items ?? []);
+            setDataSource(rows.map(toRow));
+        } catch (err) {
+            if (!isMounted.current) return;
+            setError(err);
+            displayError(err);
+        } finally {
+            if (isMounted.current) setLoading(false);
+        }
+    }, [paramsKey]);
+
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
+
+    const removeRecord = useCallback(async (id) => {
+        try {
+            await removeRequest(id);
+            notifySuccess(t('multiFormat.messages.deleted'));
+            await fetchData();
+            return true;
+        } catch (err) {
+            displayError(err);
+            return false;
+        }
+    }, [fetchData, t]);
+
+    return {
+        dataSource,
+        loading,
+        error,
+        refresh: fetchData,
+        removeRecord,
+    };
 }

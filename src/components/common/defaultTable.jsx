@@ -1,13 +1,14 @@
 import { Table } from "antd";
 
-export default function DefaultTable({columns,data }) {
+export default function DefaultTable({ columns, data, loading = false, rowKey = "key", ...props }) {
 
     return (
-        <>
-            <Table
-                columns={columns}
-                dataSource={data}
-            />
-        </>
+        <Table
+            {...props}
+            columns={columns}
+            dataSource={data}
+            loading={loading}
+            rowKey={rowKey}
+        />
     )
 }

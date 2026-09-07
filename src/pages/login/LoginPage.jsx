@@ -1,8 +1,8 @@
 import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Form, Button, Card, Alert } from "antd";
+import { Form, Card, Alert } from "antd";
 import { Login } from "./api/LoginApi";
-import displayError from "../../Utils/display-errors";
+import displayError from "../../utils/display-errors";
 import { AuthContext } from "./AuthProvider";
 import styles from "../login/styles/LoginPage.module.css"
 import AppButton from "../../components/common/buttons";
@@ -14,31 +14,27 @@ export default function LoginPage() {
   const { loginCtx } = useContext(AuthContext);
   const navigate = useNavigate();
   const [loginErrors, setLoginErrors] = useState();
+  const [loading, setLoading] = useState(false);
   const { t } = useTranslation();
 
   const onFinish = async () => {
+    setLoading(true);
     try {
       const res = await Login();
       const data = res.data;
 
-      console.log("LOGIN OK", data);
-
-loginCtx(data);
-
-navigate("/homePage");
-
+      loginCtx(data);
+      navigate("/");
     } catch (error) {
       setLoginErrors(error.response?.data);
       displayError(error);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className={styles.mainBackground}>
-      <div>
-        
-      </div>
-      
       <Card className={styles.contentDesign}>
         {loginErrors && (
           <Alert
@@ -55,23 +51,20 @@ navigate("/homePage");
         />
 
         <p>
-          Welcome to APP
+          {t("login.welcome")}
         </p>
 
         <Form onFinish={onFinish}>
           <Form.Item>
-             <AppButton
-                    title={t("dashboard.login")}
-                    icon={<LoginOutlined style={{ fontSize: 25 }} />}
-                    startColor="#fb8421"
-                    endColor="#162852"
-                    loading={false}
-                    disabled={false}
-                  htmlType="submit"
-                />
-            {/* <Button type="primary" htmlType="submit" block>
-              Accesar
-            </Button> */}
+            <AppButton
+              title={t("dashboard.login")}
+              icon={<LoginOutlined style={{ fontSize: 25 }} />}
+              startColor="#fb8421"
+              endColor="#162852"
+              loading={loading}
+              disabled={loading}
+              htmlType="submit"
+            />
           </Form.Item>
         </Form>
       </Card>

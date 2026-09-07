@@ -3,3 +3,142 @@
     justify-content: flex-end;
     padding: 10px;
 }
+
+.homeWrapper {
+    padding: 8px 4px 24px;
+}
+
+.homeTitle {
+    margin: 0 0 22px;
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: .2px;
+    color: #162852;
+}
+
+/* Grid que se reacomoda solo: entran tantas columnas como quepan y,
+   cuando sobra espacio, el bloque completo queda centrado
+   horizontalmente (arriba, no al centro vertical de la pantalla). */
+.moduleGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, 260px);
+    justify-content: center;
+    gap: 22px;
+    align-items: stretch;
+}
+
+/* Boton grande y minimalista: icono arriba, nombre abajo. */
+.moduleTile {
+    position: relative;
+    overflow: hidden;
+
+    min-height: 180px;
+    padding: 26px 20px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    cursor: pointer;
+    text-align: center;
+
+    background: #ffffff;
+    border: 1px solid rgba(22, 40, 82, .10);
+    border-top: 4px solid var(--start-color);
+    border-radius: 16px;
+
+    box-shadow: 0 2px 8px rgba(22, 40, 82, .06);
+
+    transition:
+        transform .25s ease,
+        box-shadow .25s ease,
+        border-color .25s ease;
+}
+
+/* Capa del barrido: crece de izquierda a derecha, igual que el boton "Siguiente" */
+.moduleTile::after {
+    content: "";
+
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    width: 0%;
+    height: 100%;
+
+    background: linear-gradient(80deg,
+            var(--start-color),
+            var(--end-color));
+
+    transition: width .35s ease;
+
+    z-index: 0;
+}
+
+/* Icono encima del nombre */
+.tileContent {
+    position: relative;
+    z-index: 2;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+}
+
+.tileIcon {
+    font-size: 46px;
+    line-height: 1;
+    color: var(--start-color);
+    transition: color .25s ease, transform .25s ease;
+}
+
+.tileLabel {
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: .2px;
+    line-height: 1.3;
+    color: #162852;
+    transition: color .25s ease;
+}
+
+/* Hover */
+.moduleTile:hover {
+    transform: translateY(-4px);
+    border-color: transparent;
+    box-shadow: 0 14px 28px rgba(22, 40, 82, .20);
+}
+
+.moduleTile:hover::after {
+    width: 100%;
+}
+
+.moduleTile:hover .tileIcon,
+.moduleTile:hover .tileLabel {
+    color: #ffffff;
+}
+
+.moduleTile:hover .tileIcon {
+    transform: scale(1.08);
+}
+
+/* Accesibilidad: mismo realce al navegar con teclado */
+.moduleTile:focus-visible {
+    outline: none;
+    box-shadow:
+        0 14px 28px rgba(22, 40, 82, .20),
+        0 0 0 3px rgba(22, 118, 255, .35);
+}
+
+/* Click */
+.moduleTile:active {
+    transform: translateY(0) scale(.985);
+    box-shadow: 0 4px 10px rgba(22, 40, 82, .16);
+}
+
+@media (max-width: 480px) {
+    .moduleGrid {
+        grid-template-columns: minmax(0, 260px);
+    }
+}
