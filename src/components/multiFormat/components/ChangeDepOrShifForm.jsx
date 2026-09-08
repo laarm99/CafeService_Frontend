@@ -1,9 +1,13 @@
-import { Card, Col, Form, Input, Row, Typography } from "antd";
+import { Card, Col, DatePicker, Form, Input, Row, Typography } from "antd";
 import { useTranslation } from "react-i18next";
 import styles from "../styles/MultiFormatForm.module.css";
 
+const DISPLAY_DATE = "DD/MM/YYYY";
+
 // Los datos "Actuales" vienen del empleado (solo lectura);
 // los "Nuevos" son los que se capturan y viajan al backend.
+// La fecha efectiva pertenece a este movimiento, por eso vive aqui
+// y no en la tarjeta de datos del empleado.
 export default function ChangeDepOrShift({ employee = null }) {
     const { t } = useTranslation();
 
@@ -29,6 +33,27 @@ export default function ChangeDepOrShift({ employee = null }) {
 
     return (
         <Card>
+            <Row gutter={16}>
+                <Col xs={24} md={12}>
+                    <Form.Item
+                        label={t("multiFormat.effectiveDate.label")}
+                        name="effectiveDate"
+                        rules={[
+                            {
+                                required: true,
+                                message: t("multiFormat.effectiveDate.required"),
+                            },
+                        ]}
+                    >
+                        <DatePicker
+                            format={DISPLAY_DATE}
+                            style={{ width: "100%" }}
+                            className={styles.modernInput}
+                        />
+                    </Form.Item>
+                </Col>
+            </Row>
+
             <Row gutter={16}>
                 <Col span={12}>
                     <Typography.Text strong>{t("multiFormat.change.currentData")}</Typography.Text>

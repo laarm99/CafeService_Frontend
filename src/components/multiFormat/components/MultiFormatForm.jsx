@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, Col, DatePicker, Form, Popconfirm, Row, Skeleton, Tabs, Typography } from "antd";
+import { Card, Col, Form, Popconfirm, Row, Skeleton, Tabs, Typography } from "antd";
 import {
     FileProtectOutlined,
     FileTextOutlined,
@@ -27,6 +27,36 @@ const MOVEMENT_TYPE_BY_TAB = {
     "1": "CHANGE_DEP_SHIFT",
     "2": "VACATION",
     "3": "PERMISSION",
+};
+
+// Campos que pertenecen a cada movimiento.
+// Solo estos viajan al backend, para que al cambiar de pestaña no se envien
+// datos de un movimiento que no es el seleccionado.
+// La fecha efectiva pertenece al cambio de departamento y/o turno.
+const FIELDS_BY_MOVEMENT = {
+    CHANGE_DEP_SHIFT: [
+        "effectiveDate",
+        "newPlant",
+        "newShift",
+        "newDepartment",
+        "newSupervisor",
+        "newArea",
+    ],
+    VACATION: [
+        "vacationDays",
+        "vacationStartDate",
+        "vacationEndDate",
+        "vacationReturnDate",
+    ],
+    PERMISSION: [
+        "permissionType",
+        "permissionDays",
+        "permissionStartDate",
+        "permissionEndDate",
+        "permissionReturnDate",
+        "swapDetail",
+        "attachments",
+    ],
 };
 
 const DISPLAY_DATE = "DD/MM/YYYY";
@@ -91,10 +121,17 @@ export default function MultiFormatForm({ id = null }) {
     }, [id, form, navigate]);
 
     const handleFinish = (values) => {
-        // Se envia lo capturado en la pestaña activa mas los datos del empleado.
+        const movementType = MOVEMENT_TYPE_BY_TAB[activeTab];
+
+        // Solo se envian los campos del movimiento seleccionado
+        const movementValues = (FIELDS_BY_MOVEMENT[movementType] ?? []).reduce((acc, field) => {
+            if (values[field] !== undefined) acc[field] = values[field];
+            return acc;
+        }, {});
+
         submit({
-            ...values,
-            movementType: MOVEMENT_TYPE_BY_TAB[activeTab],
+            ...movementValues,
+            movementType,
             clockNumber: employee?.clockNumber,
             netkey: employee?.netkey,
             fullName: employee?.fullName,
@@ -176,29 +213,6 @@ export default function MultiFormatForm({ id = null }) {
                                     </Form.Item>
                                 </Col>
                             </Row>
-
-                            <div style={{ justifyItems: "center" }}>
-                                <Row gutter={16}>
-                                    <Col xs={24} md={24}>
-                                        <Form.Item
-                                            label={t("multiFormat.effectiveDate.label")}
-                                            name="effectiveDate"
-                                            rules={[
-                                                {
-                                                    required: true,
-                                                    message: t("multiFormat.effectiveDate.required"),
-                                                },
-                                            ]}
-                                        >
-                                            <DatePicker
-                                                format={DISPLAY_DATE}
-                                                style={{ width: "auto" }}
-                                                className={styles.modernInput}
-                                            />
-                                        </Form.Item>
-                                    </Col>
-                                </Row>
-                            </div>
                         </div>
                     </Card>
 
@@ -208,9 +222,12 @@ export default function MultiFormatForm({ id = null }) {
                         className={styles.modernCardEmployeData}
                         title={t("multiFormat.movement.section")}
                     >
+                        {/* destroyOnHidden: la pestaña inactiva se desmonta, asi sus
+                            campos requeridos no bloquean el envio de otro movimiento. */}
                         <Tabs
                             activeKey={activeTab}
                             onChange={setActiveTab}
+                            destroyOnHidden
                             items={[
                                 {
                                     key: "1",

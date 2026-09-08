@@ -85,6 +85,11 @@ export default function MultiFormatDetail({ id: idProp = null }) {
 
             return (
                 <Descriptions column={{ xs: 1, md: 2 }} bordered size="small">
+                    {/* La fecha efectiva pertenece a este movimiento */}
+                    <Descriptions.Item label={t("multiFormat.effectiveDate.label")} span={2}>
+                        {dateValue(record.effectiveDate)}
+                    </Descriptions.Item>
+
                     {rows.map((row) => (
                         <Descriptions.Item label={row.label} key={row.field}>
                             {value(record[row.field])}
@@ -263,9 +268,6 @@ export default function MultiFormatDetail({ id: idProp = null }) {
                                 </Descriptions.Item>
                                 <Descriptions.Item label={t("multiFormat.grid.netkey")}>
                                     {value(record.netkey)}
-                                </Descriptions.Item>
-                                <Descriptions.Item label={t("multiFormat.effectiveDate.label")} span={3}>
-                                    {dateValue(record.effectiveDate)}
                                 </Descriptions.Item>
                             </Descriptions>
                         </Card>

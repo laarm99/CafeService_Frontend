@@ -87,7 +87,6 @@ let MOCK_DB = [
         movementType: 'VACATION',
         status: STATUS.SUBMITTED,
         approver: MOCK_APPROVER,
-        effectiveDate: '2026-02-02',
         vacationDays: 5,
         vacationStartDate: '2026-02-02',
         vacationEndDate: '2026-02-06',
@@ -104,7 +103,6 @@ let MOCK_DB = [
         movementType: 'PERMISSION',
         status: STATUS.APPROVED,
         approver: MOCK_APPROVER,
-        effectiveDate: '2026-01-25',
         permissionType: 1,
         permissionDays: 3,
         permissionStartDate: '2026-01-25',
@@ -146,7 +144,6 @@ let MOCK_DB = [
         movementType: 'VACATION',
         status: STATUS.SUBMITTED,
         approver: MOCK_APPROVER,
-        effectiveDate: '2026-02-16',
         vacationDays: 10,
         vacationStartDate: '2026-02-16',
         vacationEndDate: '2026-02-27',
@@ -163,7 +160,6 @@ let MOCK_DB = [
         movementType: 'PERMISSION',
         status: STATUS.APPROVED,
         approver: MOCK_APPROVER,
-        effectiveDate: '2026-02-03',
         permissionType: 4,
         permissionDays: 1,
         permissionStartDate: '2026-02-03',
@@ -227,8 +223,9 @@ export async function getByIdMock(id) {
 export async function createMock(payload) {
     await delay();
 
-    // Simulacion de la validacion del back (se elimina cuando exista el endpoint)
-    if (!payload?.effectiveDate) {
+    // Simulacion de la validacion del back (se elimina cuando exista el endpoint).
+    // La fecha efectiva solo aplica al cambio de departamento y/o turno.
+    if (payload?.movementType === 'CHANGE_DEP_SHIFT' && !payload?.effectiveDate) {
         throw buildValidationError({ effectiveDate: ['La fecha efectiva es requerida.'] });
     }
 
