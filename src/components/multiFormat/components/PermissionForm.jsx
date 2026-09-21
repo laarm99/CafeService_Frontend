@@ -9,6 +9,9 @@ import {
 } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import styles from "../styles/MultiFormatForm.module.css";
+import { useEffect, useState } from "react";
+import { calculateDays } from "../../../utils/date-calculations";
+import dayjs from "dayjs";
 
 const { Dragger } = Upload;
 
@@ -20,6 +23,20 @@ const SWAP_TYPE = 5;
 
 export default function PermissionForm() {
     const { t } = useTranslation();
+    const form = Form.useFormInstance();
+    const [startDate, setStartDate] = useState("");
+    const [endDate, setEndDate] = useState("");    
+
+    const disabledDate = (current) =>
+            current && current.isBefore(dayjs().startOf("day"), "day");
+    
+        useEffect(() => {
+        const days = calculateDays(startDate, endDate);
+    
+        form.setFieldsValue({
+            permissionDays: days
+        });
+    },[startDate, endDate, form]);
 
     // El tipo de permiso ahora vive en el Form, no en un useState local,
     // asi viaja al backend junto con el resto de los campos.
@@ -118,7 +135,7 @@ export default function PermissionForm() {
             <Row gutter={12}>
                 <Col xs={24} md={3}>
                     <Form.Item label={t("multiFormat.permission.days")} name="permissionDays">
-                        <InputNumber min={1} style={{ width: "100%" }} className={styles.modernInput} />
+                        <InputNumber disabled className={styles.modernInput} />
                     </Form.Item>
                 </Col>
 
@@ -129,8 +146,11 @@ export default function PermissionForm() {
                     >
                         <DatePicker
                             format={DISPLAY_DATE}
+                            disabledDate={disabledDate}
                             style={{ width: "100%" }}
                             className={styles.modernInput}
+                            onChange={(date) =>
+                                setStartDate(date ? date.format("YYYY-MM-DD") : "")}
                         />
                     </Form.Item>
                 </Col>
@@ -139,8 +159,11 @@ export default function PermissionForm() {
                     <Form.Item label={t("multiFormat.permission.endDate")} name="permissionEndDate">
                         <DatePicker
                             format={DISPLAY_DATE}
+                            disabledDate={disabledDate}
                             style={{ width: "100%" }}
                             className={styles.modernInput}
+                            onChange={(date) =>
+                                setEndDate(date ? date.format("YYYY-MM-DD") : "")}
                         />
                     </Form.Item>
                 </Col>
@@ -151,9 +174,10 @@ export default function PermissionForm() {
                         name="permissionReturnDate"
                     >
                         <DatePicker
-                            format={DISPLAY_DATE}
+                            format={DISPLAY_DATE}      
+                            disabledDate={disabledDate}                      
                             style={{ width: "100%" }}
-                            className={styles.modernInput}
+                            className={styles.modernInput}                           
                         />
                     </Form.Item>
                 </Col>
