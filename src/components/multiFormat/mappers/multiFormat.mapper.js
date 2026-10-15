@@ -31,8 +31,8 @@ export function toPayload(values = {}) {
 
     const payload = normalize(rest);
 
-    // El Upload de antd entrega objetos de archivo; al back solo le mandamos
-    // los ids/nombres. Cuando exista el endpoint de adjuntos se cambia aqui.
+    // Las actualizaciones conservan metadatos; la creacion convierte los
+    // archivos originales al DTO de adjuntos en MultiFormatApi.
     if (Array.isArray(attachments)) {
         payload.attachments = attachments.map((file) => ({
             name: file.name,

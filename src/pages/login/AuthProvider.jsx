@@ -1,58 +1,155 @@
-import { createContext, useState, useEffect } from "react";
+import {
+    createContext,
+    useCallback,
+    useEffect,
+    useRef,
+    useState,
+} from "react";
 import { useNavigate } from "react-router-dom";
+import { Login } from "./api/LoginApi";
 
 export const AuthContext = createContext();
 
+const EMPTY_AUTH = {
+    isAuthenticated: false,
+    user: null,
+};
+
 export default function AuthProvider({ children }) {
-    const [auth, setAuth] = useState({
-        isAuthenticated: false,
-        user: null,
-    });
-    const [loading, setLoading] = useState(true); // Estado de carga
     const navigate = useNavigate();
 
-    useEffect(() => {
-        const user = localStorage.getItem("user");
+    const [auth, setAuth] = useState(EMPTY_AUTH);
+    const [loading, setLoading] = useState(true);
 
-        if (user) {
-            setAuth({
-                isAuthenticated: true,
-                user: JSON.parse(user)
-            });
-        } else {
-            console.log("No hay token");
+    // Evitar que una respuesta pendiente restaure la sesión
+    // después de que el usuario haya cerrado sesión.
+    const sessionVersion = useRef(0);
+
+    // Mantener la firma que ya utiliza LoginPage.jsx:
+    // loginCtx(response.data).
+    const loginCtx = useCallback((user) => {
+        if (
+            !user ||
+            typeof user !== "object" ||
+            typeof user.domainUserName !== "string" ||
+            !user.domainUserName.trim() ||
+            user.isActive !== true
+        ) {
+            throw new Error(
+                "El backend no devolvió una cuenta válida."
+            );
         }
-        setLoading(false); // Finaliza la carga
-    }, []);
 
-    const loginCtx = (user) => {
+        sessionVersion.current += 1;
+
+        // Se guarda como referencia para solicitar la
+        // validación al recargar, no como prueba de acceso.
+        localStorage.setItem("user", JSON.stringify(user));
 
         setAuth({
             isAuthenticated: true,
-            user
+            user,
         });
 
-        localStorage.setItem(
-            "user",
-            JSON.stringify(user)
-        );
-    };
+        setLoading(false);
+    }, []);
 
-    const logout = () => {
-        setAuth({
-            isAuthenticated: false,
-            user: null
-        });
+    const logout = useCallback(() => {
+        sessionVersion.current += 1;
+
         localStorage.removeItem("user");
-        navigate("/login");
-    };
 
-    if (loading) {
-        return <div>Cargando...</div>; // Muestra un spinner o mensaje de carga
-    }
+        setAuth(EMPTY_AUTH);
+        setLoading(false);
+
+        navigate("/login", { replace: true });
+    }, [navigate]);
+
+    useEffect(() => {
+        let cancelled = false;
+
+        const version = sessionVersion.current;
+
+        const isCurrentRequest = () =>
+            !cancelled &&
+            sessionVersion.current === version;
+
+        async function restoreSession() {
+            try {
+                const storedUser = localStorage.getItem("user");
+
+                // Sin una sesión previa, se conserva la pantalla
+                // de login. No iniciar sesión automáticamente.
+                if (!storedUser) {
+                    if (isCurrentRequest()) {
+                        setAuth(EMPTY_AUTH);
+                    }
+
+                    return;
+                }
+
+                // No confiar en los datos guardados:
+                // consultar de nuevo al backend.
+                const response = await Login();
+                const user = response.data;
+
+                if (!isCurrentRequest()) {
+                    return;
+                }
+
+                if (
+                    !user ||
+                    typeof user !== "object" ||
+                    typeof user.domainUserName !== "string" ||
+                    !user.domainUserName.trim() ||
+                    user.isActive !== true
+                ) {
+                    throw new Error(
+                        "El backend no devolvió una cuenta válida."
+                    );
+                }
+
+                // Reemplazar la copia local por los datos
+                // que acaba de devolver el backend.
+                localStorage.setItem(
+                    "user",
+                    JSON.stringify(user)
+                );
+
+                setAuth({
+                    isAuthenticated: true,
+                    user,
+                });
+            } catch {
+                // Si no se puede validar el acceso, no restaurarlo.
+                // Incluye acceso denegado y problemas de conexión.
+                if (isCurrentRequest()) {
+                    localStorage.removeItem("user");
+                    setAuth(EMPTY_AUTH);
+                }
+            } finally {
+                if (isCurrentRequest()) {
+                    setLoading(false);
+                }
+            }
+        }
+
+        restoreSession();
+
+        return () => {
+            cancelled = true;
+        };
+    }, []);
 
     return (
-        <AuthContext.Provider value={{ auth, loading, loginCtx, logout }}>
+        <AuthContext.Provider
+            value={{
+                auth,
+                loading,
+                loginCtx,
+                logout,
+            }}
+        >
             {children}
         </AuthContext.Provider>
     );

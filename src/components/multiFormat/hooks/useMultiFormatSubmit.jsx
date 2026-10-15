@@ -19,8 +19,9 @@ export default function useMultiFormatSubmit({ form, id = null, redirectTo = nul
     const submit = useCallback(async (values) => {
         setSubmitting(true);
         try {
-            const payload = toPayload(values);
-            const response = isEdit ? await update(id, payload) : await create(payload);
+            const response = isEdit
+                ? await update(id, toPayload(values))
+                : await create(values);
             const record = response?.data ?? null;
 
             // Mensaje de confirmacion indicando el aprobador asignado

@@ -13,6 +13,9 @@ export default function displayError(error){
     if(title||details){
         errorToDisplay=`${title}${details || ''}`;
     }
+    else if(data?.message){
+        errorToDisplay=data.message;
+    }
     else if(itHasNonFieldErrors){
         errorToDisplay=nfe[0];
     }

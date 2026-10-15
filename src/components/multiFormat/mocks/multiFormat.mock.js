@@ -58,8 +58,6 @@ export const MOCK_CATALOGS = {
     ],
 };
 
-// Empleado dummy: cuando exista el endpoint lo devolvera
-// /MultiFormat/currentEmployee.
 export const MOCK_CURRENT_EMPLOYEE = {
     clockNumber: '123456',
     fullName: 'Jose Luis Lara Armendariz',
@@ -317,9 +315,4 @@ export async function getApproverMock() {
 export async function getCatalogsMock() {
     await delay(150);
     return ok(MOCK_CATALOGS);
-}
-
-export async function getCurrentEmployeeMock() {
-    await delay(150);
-    return ok({ ...MOCK_CURRENT_EMPLOYEE });
 }

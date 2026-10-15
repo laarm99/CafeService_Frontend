@@ -7,6 +7,7 @@ import {
     SendOutlined,
     SunOutlined,
     SwapOutlined,
+    ClockCircleOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useTranslation } from "react-i18next";
@@ -16,8 +17,10 @@ import AppButton from "../../common/buttons";
 import ChangeDepOrShift from "./ChangeDepOrShifForm";
 import VacationsForm from "./VacationForm";
 import PermissionForm from "./PermissionForm";
+import TimeAdjustmentForm from "./TimeAdjustmentForm";
 
 import { getById, getCurrentEmployee } from "../api/MultiFormatApi";
+import { getManagedEmployees } from "../api/ManagedEmployeesApi";
 import { toFormValues } from "../mappers/multiFormat.mapper";
 import useMultiFormatSubmit from "../hooks/useMultiFormatSubmit";
 import displayError from "../../../utils/display-errors";
@@ -27,6 +30,7 @@ const MOVEMENT_TYPE_BY_TAB = {
     "1": "CHANGE_DEP_SHIFT",
     "2": "VACATION",
     "3": "PERMISSION",
+    "4": "TIME_ADJUSTMENT",
 };
 
 // Campos que pertenecen a cada movimiento.
@@ -35,6 +39,7 @@ const MOVEMENT_TYPE_BY_TAB = {
 // La fecha efectiva pertenece al cambio de departamento y/o turno.
 const FIELDS_BY_MOVEMENT = {
     CHANGE_DEP_SHIFT: [
+        "employeeId",
         "effectiveDate",
         "newPlant",
         "newShift",
@@ -57,6 +62,13 @@ const FIELDS_BY_MOVEMENT = {
         "swapDetail",
         "attachments",
     ],
+    TIME_ADJUSTMENT: [
+        "adjustmentDate",
+        "missingPunchType",
+        "entryTime",
+        "exitTime",
+        "justification",
+    ],
 };
 
 const DISPLAY_DATE = "DD/MM/YYYY";
@@ -67,6 +79,12 @@ export default function MultiFormatForm({ id = null }) {
     const [form] = Form.useForm();
 
     const [employee, setEmployee] = useState(null);
+    const [selectedEmployee, setSelectedEmployee] = useState(null);
+    const [managedEmployees, setManagedEmployees] = useState([]);
+    const [managedEmployeesLoading, setManagedEmployeesLoading] = useState(false);
+    const [managedEmployeesError, setManagedEmployeesError] = useState(false);
+    const [managedEmployeesRequest, setManagedEmployeesRequest] = useState(0);
+    const [pendingEmployeeId, setPendingEmployeeId] = useState(null);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState("1");
 
@@ -86,6 +104,7 @@ export default function MultiFormatForm({ id = null }) {
             try {
                 const employeeResponse = await getCurrentEmployee();
                 if (cancelled) return;
+
                 setEmployee(employeeResponse.data);
 
                 if (id) {
@@ -105,7 +124,12 @@ export default function MultiFormatForm({ id = null }) {
                     const tab = Object.keys(MOVEMENT_TYPE_BY_TAB).find(
                         (key) => MOVEMENT_TYPE_BY_TAB[key] === values.movementType
                     );
-                    if (tab) setActiveTab(tab);
+                    if (tab) {
+                        setActiveTab(tab);
+                        if (values.movementType === "CHANGE_DEP_SHIFT") {
+                            setPendingEmployeeId(values.employeeId);
+                        }
+                    }
                 }
             } catch (err) {
                 if (!cancelled) displayError(err);
@@ -120,8 +144,100 @@ export default function MultiFormatForm({ id = null }) {
         };
     }, [id, form, navigate]);
 
+    // La lista la limita el backend a las personas a cargo del usuario autenticado.
+    useEffect(() => {
+        let cancelled = false;
+
+        async function loadManagedEmployees() {
+            setManagedEmployeesLoading(true);
+            setManagedEmployeesError(false);
+            try {
+                const response = await getManagedEmployees();
+                if (!cancelled) setManagedEmployees(response.data);
+            } catch (err) {
+                if (!cancelled) {
+                    setManagedEmployees([]);
+                    setManagedEmployeesError(true);
+                    console.error("No fue posible cargar los empleados a cargo.", err);
+                }
+            } finally {
+                if (!cancelled) setManagedEmployeesLoading(false);
+            }
+        }
+
+        loadManagedEmployees();
+        return () => {
+            cancelled = true;
+        };
+    }, [managedEmployeesRequest]);
+
+    useEffect(() => {
+        if (pendingEmployeeId === null || pendingEmployeeId === undefined) return;
+
+        const recordEmployee = managedEmployees.find(
+            (managedEmployee) => String(managedEmployee.id) === String(pendingEmployeeId)
+        );
+        if (recordEmployee) {
+            setSelectedEmployee(recordEmployee);
+            form.setFieldsValue({ employeeId: recordEmployee.id });
+        } else if (!managedEmployeesLoading && !managedEmployeesError) {
+            setSelectedEmployee(null);
+            form.setFieldsValue({ employeeId: undefined });
+        }
+    }, [
+        form,
+        managedEmployees,
+        managedEmployeesError,
+        managedEmployeesLoading,
+        pendingEmployeeId,
+    ]);
+
+    const handleEmployeeChange = (nextEmployee) => {
+        setSelectedEmployee(nextEmployee);
+        setPendingEmployeeId(null);
+        form.setFieldsValue({
+            employeeId: nextEmployee?.id,
+            effectiveDate: undefined,
+            newPlant: undefined,
+            newShift: undefined,
+            newDepartment: undefined,
+            newSupervisor: undefined,
+            newArea: undefined,
+        });
+        form.setFields([
+            "employeeId",
+            "effectiveDate",
+            "newPlant",
+            "newShift",
+            "newDepartment",
+            "newSupervisor",
+            "newArea",
+        ].map((name) => ({ name, errors: [], touched: false })));
+    };
+
     const handleFinish = (values) => {
+        if (!employee) {
+            displayError(new Error("No se pudieron cargar los datos del empleado."));
+            return;
+        }
+
         const movementType = MOVEMENT_TYPE_BY_TAB[activeTab];
+        if (
+            movementType === "CHANGE_DEP_SHIFT"
+            && (
+                !selectedEmployee
+                || String(selectedEmployee.id) !== String(values.employeeId)
+                || !managedEmployees.some(
+                    (managedEmployee) => String(managedEmployee.id) === String(values.employeeId)
+                )
+            )
+        ) {
+            form.setFields([{
+                name: "employeeId",
+                errors: [t("multiFormat.change.employees.required")],
+            }]);
+            return;
+        }
 
         // Solo se envian los campos del movimiento seleccionado
         const movementValues = (FIELDS_BY_MOVEMENT[movementType] ?? []).reduce((acc, field) => {
@@ -132,9 +248,12 @@ export default function MultiFormatForm({ id = null }) {
         submit({
             ...movementValues,
             movementType,
-            clockNumber: employee?.clockNumber,
-            netkey: employee?.netkey,
-            fullName: employee?.fullName,
+            clockNumber: movementType === "CHANGE_DEP_SHIFT"
+                ? selectedEmployee?.employeeNumber
+                : employee.employeeNumber,
+            fullName: movementType === "CHANGE_DEP_SHIFT"
+                ? selectedEmployee?.fullName
+                : employee.fullName,
         });
     };
 
@@ -156,6 +275,7 @@ export default function MultiFormatForm({ id = null }) {
                 <Form
                     form={form}
                     layout="vertical"
+                    disabled={!employee}
                     style={{ width: "100%" }}
                     onFinish={handleFinish}
                     initialValues={{ permissionType: 1 }}
@@ -171,7 +291,9 @@ export default function MultiFormatForm({ id = null }) {
                                         {t("multiFormat.employee.currentDate")}
                                     </Typography.Text>
                                     <Typography.Text type="secondary" style={{ marginLeft: 6 }}>
-                                        {dayjs().format(DISPLAY_DATE)}
+                                        {employee?.currentDate
+                                            ? dayjs(employee.currentDate).format(DISPLAY_DATE)
+                                            : "-"}
                                     </Typography.Text>
                                 </Col>
                             </Row>
@@ -181,7 +303,7 @@ export default function MultiFormatForm({ id = null }) {
                             <Row gutter={16}>
                                 <Col xs={24} md={3}>
                                     <Form.Item label={t("multiFormat.employee.clockNumber")}>
-                                        <Typography.Text>{employee?.clockNumber ?? "-"}</Typography.Text>
+                                        <Typography.Text>{employee?.employeeNumber ?? "-"}</Typography.Text>
                                     </Form.Item>
                                 </Col>
 
@@ -193,23 +315,13 @@ export default function MultiFormatForm({ id = null }) {
 
                                 <Col xs={24} md={5}>
                                     <Form.Item label={t("multiFormat.employee.position")}>
-                                        <Typography.Text>{employee?.position ?? "-"}</Typography.Text>
+                                        <Typography.Text>{employee?.position || "-"}</Typography.Text>
                                     </Form.Item>
                                 </Col>
 
                                 <Col xs={24} md={5}>
                                     <Form.Item label={t("multiFormat.employee.department")}>
                                         <Typography.Text>{employee?.department ?? "-"}</Typography.Text>
-                                    </Form.Item>
-                                </Col>
-
-                                <Col xs={24} md={4}>
-                                    <Form.Item label={t("multiFormat.employee.hireDate")}>
-                                        <Typography.Text>
-                                            {employee?.hireDate
-                                                ? dayjs(employee.hireDate).format(DISPLAY_DATE)
-                                                : "-"}
-                                        </Typography.Text>
                                     </Form.Item>
                                 </Col>
                             </Row>
@@ -232,7 +344,16 @@ export default function MultiFormatForm({ id = null }) {
                                 {
                                     key: "1",
                                     label: t("multiFormat.movement.CHANGE_DEP_SHIFT"),
-                                    children: <ChangeDepOrShift employee={employee} />,
+                                    children: (
+                                        <ChangeDepOrShift
+                                            employee={selectedEmployee}
+                                            employees={managedEmployees}
+                                            employeesLoading={managedEmployeesLoading}
+                                            employeesError={managedEmployeesError}
+                                            onRetryEmployees={() => setManagedEmployeesRequest((value) => value + 1)}
+                                            onEmployeeChange={handleEmployeeChange}
+                                        />
+                                    ),
                                     icon: <SwapOutlined />,
                                 },
                                 {
@@ -246,6 +367,12 @@ export default function MultiFormatForm({ id = null }) {
                                     label: t("multiFormat.movement.PERMISSION"),
                                     children: <PermissionForm />,
                                     icon: <FileProtectOutlined />,
+                                },
+                                {
+                                    key: "4",
+                                    label: t("multiFormat.movement.TIME_ADJUSTMENT"),
+                                    children: <TimeAdjustmentForm />,
+                                    icon: <ClockCircleOutlined />,
                                 },
                             ]}
                         />
@@ -269,7 +396,7 @@ export default function MultiFormatForm({ id = null }) {
                             startColor="#fb8421"
                             endColor="#162852"
                             loading={submitting}
-                            disabled={submitting}
+                            disabled={submitting || !employee}
                         />
                     </Popconfirm>
                 </div>
