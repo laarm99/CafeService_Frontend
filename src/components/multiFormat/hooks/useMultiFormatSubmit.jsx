@@ -16,43 +16,46 @@ export default function useMultiFormatSubmit({ form, id = null, redirectTo = nul
     const { t } = useTranslation();
     const isEdit = Boolean(id);
 
-    const submit = useCallback(async (values) => {
+    const submit = useCallback((values) => {
         setSubmitting(true);
-        try {
-            const response = isEdit
-                ? await update(id, toPayload(values))
-                : await create(values);
-            const record = response?.data ?? null;
+        return Promise.resolve()
+            .then(() => isEdit
+                ? update(id, toPayload(values))
+                : create(values))
+            .then((response) => {
+                const record = response?.data ?? null;
 
-            // Mensaje de confirmacion indicando el aprobador asignado
-            if (!isEdit && record?.approver?.name) {
-                notifySuccess(t('multiFormat.messages.sentTo', { approver: record.approver.name }));
-            } else {
-                notifySuccess(isEdit
-                    ? t('multiFormat.messages.updated')
-                    : t('multiFormat.messages.created'));
-            }
+                // Mensaje de confirmacion indicando el aprobador asignado
+                if (!isEdit && record?.approver?.name) {
+                    notifySuccess(t('multiFormat.messages.sentTo', { approver: record.approver.name }));
+                } else {
+                    notifySuccess(isEdit
+                        ? t('multiFormat.messages.updated')
+                        : t('multiFormat.messages.created'));
+                }
 
-            const target = typeof redirectTo === 'function' ? redirectTo(record) : redirectTo;
-            if (target) navigate(target, { replace: true });
+                const target = typeof redirectTo === 'function' ? redirectTo(record) : redirectTo;
+                if (target) navigate(target, { replace: true });
 
-            return record;
-        } catch (err) {
-            // fieldErrors lo agrega el interceptor de backend-requests;
-            // el fallback cubre el modo mock y llamadas directas.
-            const fieldErrors = err?.fieldErrors?.length
-                ? err.fieldErrors
-                : formatErrorsToFormFields(err?.response?.data?.errors);
+                return record;
+            })
+            .catch((err) => {
+                // fieldErrors lo agrega el interceptor de backend-requests;
+                // el fallback cubre el modo mock y llamadas directas.
+                const fieldErrors = err?.fieldErrors?.length
+                    ? err.fieldErrors
+                    : formatErrorsToFormFields(err?.response?.data?.errors);
 
-            if (form && fieldErrors?.length) {
-                form.setFields(fieldErrors);
-            }
+                if (form && fieldErrors?.length) {
+                    form.setFields(fieldErrors);
+                }
 
-            displayError(err);
-            return null;
-        } finally {
-            setSubmitting(false);
-        }
+                displayError(err);
+                return null;
+            })
+            .finally(() => {
+                setSubmitting(false);
+            });
     }, [form, id, isEdit, navigate, redirectTo, t]);
 
     return { submit, submitting, isEdit };

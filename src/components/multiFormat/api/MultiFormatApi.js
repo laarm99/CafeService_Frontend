@@ -4,8 +4,6 @@
 
 import { get, post, put, del } from '../../../services/backend-requests';
 import {
-    getAllMock,
-    getByIdMock,
     updateMock,
     removeMock,
     approveMock,
@@ -13,9 +11,10 @@ import {
     getApproverMock,
     getCatalogsMock,
 } from '../mocks/multiFormat.mock';
-import { toPayload } from '../mappers/multiFormat.mapper';
+import { toDetailRecord, toPayload } from '../mappers/multiFormat.mapper';
 
 const RESOURCE_ROOT = 'MultiFormat';
+const FORM_REQUESTS_ENDPOINT = 'form-requests';
 const CREATE_ENDPOINTS = {
     CHANGE_DEP_SHIFT: 'changes-department-or-shift/create-change-request',
     PERMISSION: 'permission-request/create-permission-request',
@@ -26,14 +25,43 @@ const CREATE_ENDPOINTS = {
 // .env -> VITE_USE_MOCKS=true (demo) | false (backend real)
 export const USE_MOCKS = String(import.meta.env.VITE_USE_MOCKS ?? 'true') === 'true';
 
-export async function getAll(params) {
-    if (USE_MOCKS) return getAllMock(params);
-    return await get(`${RESOURCE_ROOT}/listRecords`);
+export async function getAll(params = {}) {
+    const response = await get(FORM_REQUESTS_ENDPOINT, { params });
+    const result = response.data;
+
+    if (result?.isSuccess !== true || !Array.isArray(result.data)) {
+        const error = new Error(
+            result?.message || 'La respuesta de requerimientos no tiene el formato esperado.'
+        );
+        error.response = { data: result };
+        throw error;
+    }
+
+    return { ...response, data: result.data };
 }
 
 export async function getById(id) {
-    if (USE_MOCKS) return getByIdMock(id);
-    return await get(`${RESOURCE_ROOT}/${id}`);
+    if (id === undefined || id === null || id === '') {
+        throw new Error('Se requiere el id del requerimiento para consultar su detalle.');
+    }
+
+    const response = await get(`${FORM_REQUESTS_ENDPOINT}/${encodeURIComponent(id)}`);
+    const result = response.data;
+
+    if (
+        result?.isSuccess !== true
+        || !result.data
+        || typeof result.data !== 'object'
+        || Array.isArray(result.data)
+    ) {
+        const error = new Error(
+            result?.message || 'La respuesta del requerimiento no tiene el formato esperado.'
+        );
+        error.response = { data: result };
+        throw error;
+    }
+
+    return { ...response, data: toDetailRecord(result.data) };
 }
 
 async function toAttachmentDto(file) {

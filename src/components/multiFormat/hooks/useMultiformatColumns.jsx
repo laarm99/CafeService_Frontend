@@ -33,16 +33,18 @@ export default function useMultiFormatColumns() {
             key: 'fullName',
         },
         {
-            title: t('multiFormat.grid.netkey'),
-            dataIndex: 'netkey',
-            key: 'netkey',
+            title: t('multiFormat.grid.employeeNumber'),
+            dataIndex: 'employeeNumber',
+            key: 'employeeNumber',
         },
         {
             title: t('multiFormat.grid.type'),
             dataIndex: 'movementType',
             key: 'movementType',
             render: (movementType) => (
-                movementType ? t(`multiFormat.movement.${movementType}`) : '-'
+                movementType
+                    ? t(`multiFormat.movement.${movementType}`, { defaultValue: String(movementType) })
+                    : '-'
             ),
         },
         {
@@ -56,13 +58,13 @@ export default function useMultiFormatColumns() {
             key: 'status',
             dataIndex: 'status',
             render: (status) => {
-                if (!status) return null;
+                if (status === undefined || status === null || status === '') return '-';
                 const color = STATUS_COLORS[status] ?? 'orange';
 
                 return (
                     <Flex gap="small" align="center" wrap>
                         <Tag color={color}>
-                            {t(`multiFormat.status.${status}`).toUpperCase()}
+                            {t(`multiFormat.status.${status}`, { defaultValue: String(status) }).toUpperCase()}
                         </Tag>
                     </Flex>
                 );

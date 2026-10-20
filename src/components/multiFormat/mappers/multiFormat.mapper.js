@@ -8,6 +8,21 @@ import dayjs from 'dayjs';
 const DATE_FORMAT = 'YYYY-MM-DD';
 const TIME_FORMAT = 'HH:mm:ss';
 
+const FORM_TYPE_BY_ID = {
+    1: 'VACATION',
+    2: 'PERMISSION',
+    3: 'TIME_ADJUSTMENT',
+    4: 'CHANGE_DEP_SHIFT',
+};
+
+const STATUS_BY_ID = {
+    1: 'DRAFT',
+    2: 'SUBMITTED',
+    3: 'APPROVED',
+    4: 'REJECTED',
+    5: 'CANCELLED',
+};
+
 const isTimeField = (key = '') => /time$/i.test(key);
 
 // Convierte recursivamente cualquier dayjs del formulario a string.
@@ -59,10 +74,40 @@ export function toFormValues(record = {}) {
     }, {});
 }
 
+// Backend -> Detail. Adapta el contrato común de form-requests al modelo
+// consumido por la pantalla de detalle.
+export function toDetailRecord(record = {}) {
+    return {
+        ...record,
+        createdAt: record.createdAt ?? record.createdDate,
+        submittedAt: record.submittedAt ?? record.submittedDate,
+        clockNumber: record.clockNumber ?? record.employeeNumber,
+        fullName: record.fullName ?? record.employeeFullName,
+        netkey: record.netkey ?? record.domainUserName,
+        movementType: record.movementType
+            ?? FORM_TYPE_BY_ID[record.formType]
+            ?? record.formType,
+        status: STATUS_BY_ID[record.status] ?? record.status,
+        vacationStartDate: record.vacationStartDate ?? record.startDate,
+        vacationEndDate: record.vacationEndDate ?? record.endDate,
+        vacationReturnDate: record.vacationReturnDate ?? record.returnDate,
+        permissionStartDate: record.permissionStartDate ?? record.startDate,
+        permissionEndDate: record.permissionEndDate ?? record.endDate,
+        permissionReturnDate: record.permissionReturnDate ?? record.returnDate,
+    };
+}
+
 // Backend -> Grid. Garantiza la 'key' que exige la Table de Ant Design.
 export function toRow(record = {}) {
     return {
         ...record,
+        createdAt: record.createdAt ?? record.createdDate,
+        employeeNumber: record.employeeNumber ?? record.clockNumber ?? record.netkey,
+        fullName: record.fullName ?? record.employeeFullName,
+        movementType: record.movementType
+            ?? FORM_TYPE_BY_ID[record.formType]
+            ?? record.formType,
+        status: STATUS_BY_ID[record.status] ?? record.status,
         key: record.key ?? String(record.id),
     };
 }

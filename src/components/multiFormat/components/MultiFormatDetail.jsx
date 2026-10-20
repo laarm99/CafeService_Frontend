@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Alert, Card, Col, Descriptions, Empty, Row, Skeleton, Tag, Typography } from "antd";
 import {
@@ -11,16 +10,17 @@ import dayjs from "dayjs";
 import { useTranslation } from "react-i18next";
 
 import styles from "../styles/MultiFormatForm.module.css";
-import { getById } from "../api/MultiFormatApi";
 import MultiFormatApprovalActions from "./MultiFormatApprovalActions";
-import displayError from "../../../utils/display-errors";
+import useMultiFormatRecord from "../hooks/useMultiFormatRecord";
 
 const DISPLAY_DATE = "DD/MM/YYYY";
 
 const STATUS_COLORS = {
+    DRAFT: "default",
     SUBMITTED: "blue",
     APPROVED: "green",
     REJECTED: "red",
+    CANCELLED: "default",
     IN_REVIEW: "blue",
     PENDING: "orange",
 };
@@ -40,36 +40,12 @@ export default function MultiFormatDetail({ id: idProp = null }) {
     const params = useParams();
     const id = idProp ?? params.multiFormatId;
 
-    const [record, setRecord] = useState(null);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        let cancelled = false;
-
-        async function load() {
-            setLoading(true);
-            try {
-                const response = await getById(id);
-                if (!cancelled) setRecord(response.data);
-            } catch (err) {
-                if (!cancelled) displayError(err);
-            } finally {
-                if (!cancelled) setLoading(false);
-            }
-        }
-
-        load();
-        return () => {
-            cancelled = true;
-        };
-    }, [id]);
+    const { record, loading, setRecord } = useMultiFormatRecord(id);
 
     const value = (v) => (v === undefined || v === null || v === "" ? "-" : v);
     const dateValue = (v) => (v ? dayjs(v).format(DISPLAY_DATE) : "-");
 
     const isSubmitted = record?.status === "SUBMITTED";
-    const hasDecision = record?.status === "APPROVED" || record?.status === "REJECTED";
-
     // Bloque de datos que depende del tipo de movimiento
     const renderMovementDetail = () => {
         if (!record?.movementType) return <Empty description={t("multiFormat.detail.noData")} />;
@@ -80,7 +56,6 @@ export default function MultiFormatDetail({ id: idProp = null }) {
                 { label: t("multiFormat.change.shift"), field: "newShift" },
                 { label: t("multiFormat.change.department"), field: "newDepartment" },
                 { label: t("multiFormat.change.supervisor"), field: "newSupervisor" },
-                { label: t("multiFormat.change.area"), field: "newArea" },
             ];
 
             return (
@@ -148,11 +123,6 @@ export default function MultiFormatDetail({ id: idProp = null }) {
                         {value(record.swapDetail)}
                     </Descriptions.Item>
                 )}
-                <Descriptions.Item label={t("multiFormat.permission.document.label")} span={2}>
-                    {record.attachments?.length
-                        ? record.attachments.map((file) => file.name).join(", ")
-                        : "-"}
-                </Descriptions.Item>
             </Descriptions>
         );
     };
@@ -304,22 +274,6 @@ export default function MultiFormatDetail({ id: idProp = null }) {
                                         : ""}
                                 </Descriptions.Item>
 
-                                {hasDecision && (
-                                    <>
-                                        <Descriptions.Item label={t("multiFormat.approval.decisionBy")}>
-                                            {value(record.decisionBy)}
-                                        </Descriptions.Item>
-                                        <Descriptions.Item label={t("multiFormat.approval.decisionAt")}>
-                                            {dateValue(record.decisionAt)}
-                                        </Descriptions.Item>
-                                        <Descriptions.Item
-                                            label={t("multiFormat.approval.comment")}
-                                            span={2}
-                                        >
-                                            {value(record.decisionComment)}
-                                        </Descriptions.Item>
-                                    </>
-                                )}
                             </Descriptions>
 
                             {/* Acciones del aprobador: solo mientras esta Enviado.

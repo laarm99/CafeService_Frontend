@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, Col, Form, Popconfirm, Row, Skeleton, Tabs, Typography } from "antd";
 import {
@@ -19,9 +19,10 @@ import VacationsForm from "./VacationForm";
 import PermissionForm from "./PermissionForm";
 import TimeAdjustmentForm from "./TimeAdjustmentForm";
 
-import { getById, getCurrentEmployee } from "../api/MultiFormatApi";
-import { getManagedEmployees } from "../api/ManagedEmployeesApi";
 import { toFormValues } from "../mappers/multiFormat.mapper";
+import useCurrentEmployee from "../hooks/useCurrentEmployee";
+import useManagedEmployees from "../hooks/useManagedEmployees";
+import useMultiFormatRecord from "../hooks/useMultiFormatRecord";
 import useMultiFormatSubmit from "../hooks/useMultiFormatSubmit";
 import displayError from "../../../utils/display-errors";
 
@@ -78,15 +79,21 @@ export default function MultiFormatForm({ id = null }) {
     const navigate = useNavigate();
     const [form] = Form.useForm();
 
-    const [employee, setEmployee] = useState(null);
     const [selectedEmployee, setSelectedEmployee] = useState(null);
-    const [managedEmployees, setManagedEmployees] = useState([]);
-    const [managedEmployeesLoading, setManagedEmployeesLoading] = useState(false);
-    const [managedEmployeesError, setManagedEmployeesError] = useState(false);
-    const [managedEmployeesRequest, setManagedEmployeesRequest] = useState(0);
     const [pendingEmployeeId, setPendingEmployeeId] = useState(null);
-    const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState("1");
+
+    const { employee, loading: employeeLoading } = useCurrentEmployee();
+    const {
+        record,
+        loading: recordLoading,
+    } = useMultiFormatRecord(id);
+    const {
+        employees: managedEmployees,
+        loading: managedEmployeesLoading,
+        error: managedEmployeesError,
+        retry: retryManagedEmployees,
+    } = useManagedEmployees();
 
     const { submit, submitting, isEdit } = useMultiFormatSubmit({
         form,
@@ -95,81 +102,29 @@ export default function MultiFormatForm({ id = null }) {
         redirectTo: (record) => (record?.id ? `/multiFormat/${record.id}` : "/multiFormat"),
     });
 
-    // Carga los datos del empleado y, en modo edicion, el formato existente.
-    useEffect(() => {
-        let cancelled = false;
+    // Aplica al formulario el formato cargado por el hook compartido.
+    useLayoutEffect(() => {
+        if (!id || !record) return;
 
-        async function load() {
-            setLoading(true);
-            try {
-                const employeeResponse = await getCurrentEmployee();
-                if (cancelled) return;
-
-                setEmployee(employeeResponse.data);
-
-                if (id) {
-                    const recordResponse = await getById(id);
-                    if (cancelled) return;
-                    const record = recordResponse.data;
-
-                    // Un formato ya enviado no puede modificarse: se manda al detalle
-                    if (record?.status) {
-                        navigate(`/multiFormat/${id}`, { replace: true });
-                        return;
-                    }
-
-                    const values = toFormValues(record);
-                    form.setFieldsValue(values);
-
-                    const tab = Object.keys(MOVEMENT_TYPE_BY_TAB).find(
-                        (key) => MOVEMENT_TYPE_BY_TAB[key] === values.movementType
-                    );
-                    if (tab) {
-                        setActiveTab(tab);
-                        if (values.movementType === "CHANGE_DEP_SHIFT") {
-                            setPendingEmployeeId(values.employeeId);
-                        }
-                    }
-                }
-            } catch (err) {
-                if (!cancelled) displayError(err);
-            } finally {
-                if (!cancelled) setLoading(false);
-            }
+        // Un formato ya enviado no puede modificarse: se manda al detalle.
+        if (record.status) {
+            navigate(`/multiFormat/${id}`, { replace: true });
+            return;
         }
 
-        load();
-        return () => {
-            cancelled = true;
-        };
-    }, [id, form, navigate]);
+        const values = toFormValues(record);
+        form.setFieldsValue(values);
 
-    // La lista la limita el backend a las personas a cargo del usuario autenticado.
-    useEffect(() => {
-        let cancelled = false;
-
-        async function loadManagedEmployees() {
-            setManagedEmployeesLoading(true);
-            setManagedEmployeesError(false);
-            try {
-                const response = await getManagedEmployees();
-                if (!cancelled) setManagedEmployees(response.data);
-            } catch (err) {
-                if (!cancelled) {
-                    setManagedEmployees([]);
-                    setManagedEmployeesError(true);
-                    console.error("No fue posible cargar los empleados a cargo.", err);
-                }
-            } finally {
-                if (!cancelled) setManagedEmployeesLoading(false);
+        const tab = Object.keys(MOVEMENT_TYPE_BY_TAB).find(
+            (key) => MOVEMENT_TYPE_BY_TAB[key] === values.movementType
+        );
+        if (tab) {
+            setActiveTab(tab);
+            if (values.movementType === "CHANGE_DEP_SHIFT") {
+                setPendingEmployeeId(values.employeeId);
             }
         }
-
-        loadManagedEmployees();
-        return () => {
-            cancelled = true;
-        };
-    }, [managedEmployeesRequest]);
+    }, [form, id, navigate, record]);
 
     useEffect(() => {
         if (pendingEmployeeId === null || pendingEmployeeId === undefined) return;
@@ -271,7 +226,11 @@ export default function MultiFormatForm({ id = null }) {
             }
             className={styles.modernCard}
         >
-            <Skeleton active loading={loading} paragraph={{ rows: 6 }}>
+            <Skeleton
+                active
+                loading={employeeLoading || (Boolean(id) && recordLoading)}
+                paragraph={{ rows: 6 }}
+            >
                 <Form
                     form={form}
                     layout="vertical"
@@ -350,7 +309,7 @@ export default function MultiFormatForm({ id = null }) {
                                             employees={managedEmployees}
                                             employeesLoading={managedEmployeesLoading}
                                             employeesError={managedEmployeesError}
-                                            onRetryEmployees={() => setManagedEmployeesRequest((value) => value + 1)}
+                                            onRetryEmployees={retryManagedEmployees}
                                             onEmployeeChange={handleEmployeeChange}
                                         />
                                     ),

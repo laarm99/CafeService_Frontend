@@ -25,40 +25,42 @@ export default function useMultiFormatData(params) {
 
     const paramsKey = JSON.stringify(params ?? {});
 
-    const fetchData = useCallback(async () => {
+    const fetchData = useCallback(() => {
         setLoading(true);
         setError(null);
-        try {
-            const response = await getAll(JSON.parse(paramsKey));
-            if (!isMounted.current) return;
-            const rows = Array.isArray(response?.data)
-                ? response.data
-                : (response?.data?.items ?? []);
-            setDataSource(rows.map(toRow));
-        } catch (err) {
-            if (!isMounted.current) return;
-            setError(err);
-            displayError(err);
-        } finally {
-            if (isMounted.current) setLoading(false);
-        }
+        return getAll(JSON.parse(paramsKey))
+            .then((response) => {
+                if (!isMounted.current) return;
+                const rows = Array.isArray(response?.data)
+                    ? response.data
+                    : (response?.data?.items ?? []);
+                setDataSource(rows.map(toRow));
+            })
+            .catch((err) => {
+                if (!isMounted.current) return;
+                setError(err);
+                displayError(err);
+            })
+            .finally(() => {
+                if (isMounted.current) setLoading(false);
+            });
     }, [paramsKey]);
 
     useEffect(() => {
         fetchData();
     }, [fetchData]);
 
-    const removeRecord = useCallback(async (id) => {
-        try {
-            await removeRequest(id);
-            notifySuccess(t('multiFormat.messages.deleted'));
-            await fetchData();
-            return true;
-        } catch (err) {
-            displayError(err);
-            return false;
-        }
-    }, [fetchData, t]);
+    const removeRecord = useCallback((id) => (
+        removeRequest(id)
+            .then(() => {
+                notifySuccess(t('multiFormat.messages.deleted'));
+                return fetchData().then(() => true);
+            })
+            .catch((err) => {
+                displayError(err);
+                return false;
+            })
+    ), [fetchData, t]);
 
     return {
         dataSource,
