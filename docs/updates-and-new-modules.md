@@ -346,8 +346,18 @@ Implementa los cambios por etapas:
 - ✅ Traducciones en src/locales/es.json
 - ✅ Validación de acceso por ProtectedRouteComponent
 
-Etapa 2:
-- Menú Configuración y submenús.
+**Etapa 2 (COMPLETADA):**
+- ✅ Filtro por Tipo de Formato (Select con VACATION, PERMISSION, etc.)
+- ✅ Filtro por Estatus (Select con DRAFT, SUBMITTED, APPROVED, etc.)
+- ✅ Filtro por Rango de Fechas (RangePicker con presets: Hoy, Esta semana, Este mes)
+- ✅ Campo de búsqueda con debounce (400ms) - Buscar por ID, nombre, número empleado
+- ✅ Botón Limpiar filtros
+- ✅ Filtros se preservan entre páginas
+- ✅ Filtros se resetean cuando cambia uno (página vuelve a 1)
+- ✅ Diseño responsivo (xs: 24, md: 12, lg: variable)
+- ✅ Parámetros se envían al backend: formType, status, startDate, endDate, search, page, pageSize
+- ✅ Paginación del servidor funcionando
+- ✅ Estado de carga mostrado
 
 Etapa 3:
 - Página Supervisores.
