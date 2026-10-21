@@ -336,8 +336,15 @@ Implementa los cambios por etapas:
 - ✅ Crear tipos TypeScript para usuario
 - ✅ Crear componente RolesDisplay para mostrar roles múltiples
 
-Etapa 1:
-- Rutas y reglas centralizadas de permisos.
+**Etapa 1 (COMPLETADA):**
+- ✅ Rutas protegidas configuradas en src/main.jsx
+- ✅ Menú Configuración con submenús Supervisores/Usuarios en src/layout/modules.js
+- ✅ Páginas en src/pages/supervisorsPage/index.jsx y src/pages/usersPage/index.jsx
+- ✅ Componentes SupervisorsGrid y UsersGrid en src/components/configuration/components/
+- ✅ APIs en src/components/configuration/api/ConfigurationApi.js
+- ✅ Permisos integrados: canManageSupervisors, canManageUsers
+- ✅ Traducciones en src/locales/es.json
+- ✅ Validación de acceso por ProtectedRouteComponent
 
 Etapa 2:
 - Menú Configuración y submenús.
