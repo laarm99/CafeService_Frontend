@@ -40,6 +40,16 @@ export default function AuthProvider({ children }) {
             );
         }
 
+        // Validar que tenga roles (array) o role (string) para compatibilidad
+        const hasRoles = Array.isArray(user.roles) && user.roles.length > 0;
+        const hasRole = typeof user.role === "string" && user.role.trim();
+
+        if (!hasRoles && !hasRole) {
+            throw new Error(
+                "El usuario no tiene roles asignados."
+            );
+        }
+
         sessionVersion.current += 1;
 
         // Se guarda como referencia para solicitar la
@@ -106,6 +116,16 @@ export default function AuthProvider({ children }) {
                 ) {
                     throw new Error(
                         "El backend no devolvió una cuenta válida."
+                    );
+                }
+
+                // Validar que tenga roles (array) o role (string) para compatibilidad
+                const hasRoles = Array.isArray(user.roles) && user.roles.length > 0;
+                const hasRole = typeof user.role === "string" && user.role.trim();
+
+                if (!hasRoles && !hasRole) {
+                    throw new Error(
+                        "El usuario no tiene roles asignados."
                     );
                 }
 
