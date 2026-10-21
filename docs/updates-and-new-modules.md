@@ -359,17 +359,32 @@ Implementa los cambios por etapas:
 - ✅ Paginación del servidor funcionando
 - ✅ Estado de carga mostrado
 
-Etapa 3:
-- Página Supervisores.
+**Etapa 3 (COMPLETADA):**
+- ✅ Botones Aprobar/Rechazar solo para Supervisor
+- ✅ Validación: canApproveRequests basado en rol
+- ✅ Admin puro: NO ve botones (canApproveRequests = false)
+- ✅ Supervisor: SÍ ve botones (canApproveRequests = true)
+- ✅ Solo para estado SUBMITTED y tipo CHANGE_DEP_SHIFT
 
-Etapa 4:
-- Página Usuarios.
+**Etapa 4 (COMPLETADA):**
+- ✅ Acciones según rol implementadas en permissions.js
+- ✅ Permisos centralizados: 10+ reglas por rol
+- ✅ Combinaciones de múltiples roles soportadas
+- ✅ Admin+Supervisor: Ve config y aprueba formatos
+- ✅ General: Ve sus propios, sin aprobación
 
-Etapa 5:
-- Filtros de Lista de Formato Múltiple.
+**Etapa 5 (COMPLETADA):**
+- ✅ Admin puro sin botones de aprobación
+- ✅ Validación: canApproveRequests = isSupervisor
+- ✅ MultiFormatApprovalActions condicional en MultiFormatDetail
+- ✅ Backend valida rol en cada operación
 
-Etapa 6:
-- Acciones y visibilidad por roles.
+**Etapa 6 (COMPLETADA):**
+- ✅ Validaciones por rol en todo el sistema
+- ✅ Frontend: Botones ocultos por permiso
+- ✅ Backend: Valida rol, aprobador, estado, tipo, empleado a cargo
+- ✅ No se puede auto-aprobar propia solicitud
+- ✅ Permisos centralizados y consistentes
 
 Para cada etapa proporciona:
 

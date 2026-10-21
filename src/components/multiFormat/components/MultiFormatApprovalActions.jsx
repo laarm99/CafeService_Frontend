@@ -8,10 +8,20 @@ import useMultiFormatApproval from "../hooks/useMultiFormatApproval";
 
 // Acciones del aprobador sobre un formato en estado "Enviado".
 //
-// PENDIENTE (roles y permisos): hoy los botones se muestran a cualquier usuario
-// porque el aprobador es dummy. Cuando existan roles, este componente debera
-// renderizarse solo si el usuario en sesion es el aprobador asignado
-// (por ejemplo: if (!user.canApprove(record)) return null).
+// Visibilidad por rol:
+// - Admin: NO ve estos botones (canApproveRequests = false)
+// - Supervisor: Ve estos botones (canApproveRequests = true)
+// - Admin+Supervisor: Ve estos botones (canApproveRequests = true)
+// - General: NO ve estos botones (canApproveRequests = false)
+//
+// El componente se renderiza condicionalemente en MultiFormatDetail.jsx:
+//   if (canDecide && (permissions.canApproveRequests)) { ... }
+//
+// Validaciones adicionales del backend:
+// - Formato debe estar en estado SUBMITTED
+// - Debe ser de tipo CHANGE_DEP_SHIFT
+// - El usuario debe ser el aprobador asignado
+// - No puede ser su propia solicitud
 export default function MultiFormatApprovalActions({ record, onDone }) {
     const { t } = useTranslation();
     const { approveRecord, rejectRecord, processing } = useMultiFormatApproval();

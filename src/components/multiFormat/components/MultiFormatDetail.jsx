@@ -12,6 +12,7 @@ import { useTranslation } from "react-i18next";
 import styles from "../styles/MultiFormatForm.module.css";
 import MultiFormatApprovalActions from "./MultiFormatApprovalActions";
 import useMultiFormatRecord from "../hooks/useMultiFormatRecord";
+import usePermissions from "../../../pages/login/usePermissions";
 
 const DISPLAY_DATE = "DD/MM/YYYY";
 
@@ -41,11 +42,19 @@ export default function MultiFormatDetail({ id: idProp = null }) {
     const id = idProp ?? params.multiFormatId;
 
     const { record, loading, setRecord } = useMultiFormatRecord(id);
-
+    const permissions = usePermissions();
     const value = (v) => (v === undefined || v === null || v === "" ? "-" : v);
     const dateValue = (v) => (v ? dayjs(v).format(DISPLAY_DATE) : "-");
 
     const isSubmitted = record?.status === "SUBMITTED";
+    // Aprobar/Rechazar: solo Supervisor, formato Enviado y de cambio de depto/turno.
+    // Admin puro: NO ve aprobación (canApproveRequests = false)
+    // Supervisor: Sí ve aprobación (canApproveRequests = true)
+    // Admin+Supervisor: Sí ve aprobación (canApproveRequests = true por Supervisor)
+    // El backend valida ademas que sea su empleado y que no sea su propia solicitud.
+    const canDecide = permissions.canApproveRequests
+        && isSubmitted
+        && record?.movementType === "CHANGE_DEP_SHIFT";
     // Bloque de datos que depende del tipo de movimiento
     const renderMovementDetail = () => {
         if (!record?.movementType) return <Empty description={t("multiFormat.detail.noData")} />;
@@ -278,7 +287,7 @@ export default function MultiFormatDetail({ id: idProp = null }) {
 
                             {/* Acciones del aprobador: solo mientras esta Enviado.
                                 Cuando existan roles, ademas se validara el permiso. */}
-                            {isSubmitted && (
+                            {canDecide && (
                                 <div style={{ marginTop: 18 }}>
                                     <MultiFormatApprovalActions
                                         record={record}
