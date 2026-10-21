@@ -8,14 +8,14 @@ import dayjs from 'dayjs';
 const DATE_FORMAT = 'YYYY-MM-DD';
 const TIME_FORMAT = 'HH:mm:ss';
 
-const FORM_TYPE_BY_ID = {
+export const FORM_TYPE_BY_ID = {
     1: 'VACATION',
     2: 'PERMISSION',
     3: 'TIME_ADJUSTMENT',
     4: 'CHANGE_DEP_SHIFT',
 };
 
-const STATUS_BY_ID = {
+export const STATUS_BY_ID = {
     1: 'DRAFT',
     2: 'SUBMITTED',
     3: 'APPROVED',
@@ -24,6 +24,28 @@ const STATUS_BY_ID = {
 };
 
 const isTimeField = (key = '') => /time$/i.test(key);
+
+function normalizeApprover(record = {}) {
+    const approver = record.approver;
+    const name = typeof approver === 'string'
+        ? approver
+        : approver?.name
+            ?? approver?.fullName
+            ?? record.approverName
+            ?? record.approverFullName;
+    const position = approver?.position ?? record.approverPosition;
+
+    if (!name && !position && !approver?.id && !record.approverId) {
+        return approver;
+    }
+
+    return {
+        ...(typeof approver === 'object' && approver !== null ? approver : {}),
+        id: approver?.id ?? record.approverId,
+        name,
+        position,
+    };
+}
 
 // Convierte recursivamente cualquier dayjs del formulario a string.
 // Los campos cuyo nombre termina en "Time" se mandan como HH:mm:ss.
@@ -79,6 +101,7 @@ export function toFormValues(record = {}) {
 export function toDetailRecord(record = {}) {
     return {
         ...record,
+        approver: normalizeApprover(record),
         createdAt: record.createdAt ?? record.createdDate,
         submittedAt: record.submittedAt ?? record.submittedDate,
         clockNumber: record.clockNumber ?? record.employeeNumber,
@@ -101,6 +124,7 @@ export function toDetailRecord(record = {}) {
 export function toRow(record = {}) {
     return {
         ...record,
+        approver: normalizeApprover(record),
         createdAt: record.createdAt ?? record.createdDate,
         employeeNumber: record.employeeNumber ?? record.clockNumber ?? record.netkey,
         fullName: record.fullName ?? record.employeeFullName,

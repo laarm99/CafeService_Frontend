@@ -1,7 +1,10 @@
 import { EyeFilled } from "@ant-design/icons";
 import { Button, Flex, Space, Tag, Tooltip } from "antd";
+import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+
+const DISPLAY_DATE = "DD/MM/YYYY";
 
 // El backend/mock manda codigos; el texto visible se resuelve con i18next.
 const STATUS_COLORS = {
@@ -26,6 +29,11 @@ export default function useMultiFormatColumns() {
             title: t('multiFormat.grid.createdAt'),
             dataIndex: 'createdAt',
             key: 'createdAt',
+            render: (createdAt) => {
+                if (!createdAt) return '-';
+                const date = dayjs(createdAt);
+                return date.isValid() ? date.format(DISPLAY_DATE) : '-';
+            },
         },
         {
             title: t('multiFormat.grid.fullName'),

@@ -6,8 +6,6 @@ import { get, post, put, del } from '../../../services/backend-requests';
 import {
     updateMock,
     removeMock,
-    approveMock,
-    rejectMock,
     getApproverMock,
     getCatalogsMock,
 } from '../mocks/multiFormat.mock';
@@ -29,7 +27,10 @@ export async function getAll(params = {}) {
     const response = await get(FORM_REQUESTS_ENDPOINT, { params });
     const result = response.data;
 
-    if (result?.isSuccess !== true || !Array.isArray(result.data)) {
+    // El listado paginado devuelve { items, page, pageSize, totalCount, totalPages }
+    const page = Array.isArray(result?.data) ? { items: result.data } : result?.data;
+
+    if (result?.isSuccess !== true || !Array.isArray(page?.items)) {
         const error = new Error(
             result?.message || 'La respuesta de requerimientos no tiene el formato esperado.'
         );
@@ -37,7 +38,7 @@ export async function getAll(params = {}) {
         throw error;
     }
 
-    return { ...response, data: result.data };
+    return { ...response, data: page };
 }
 
 export async function getById(id) {
@@ -188,14 +189,31 @@ export async function remove(id) {
 // --- Acciones del aprobador -------------------------------------------------
 // Cuando existan roles, el backend validara que quien llama tenga permiso.
 
+// Acciones del aprobador. El backend exige rol Supervisor, empleado a su cargo,
+// solicitud Submitted de tipo DepartmentShiftChange y que no sea la propia.
+async function decide(id, action, comment) {
+    const response = await post(
+        `${FORM_REQUESTS_ENDPOINT}/${encodeURIComponent(id)}/${action}`,
+        { comments: comment?.trim() ? comment.trim() : null }
+    );
+    const result = response.data;
+
+    if (result?.isSuccess !== true) {
+        const error = new Error(result?.message || 'No fue posible completar la operacion.');
+        error.response = { status: result?.statusCode ?? response.status, data: result };
+        throw error;
+    }
+
+    // El endpoint solo devuelve true: se recarga el detalle actualizado
+    return await getById(id);
+}
+
 export async function approve(id, comment) {
-    if (USE_MOCKS) return approveMock(id, comment);
-    return await post(`${RESOURCE_ROOT}/${id}/approve`, { comment: comment ?? null });
+    return await decide(id, 'approve', comment);
 }
 
 export async function reject(id, comment) {
-    if (USE_MOCKS) return rejectMock(id, comment);
-    return await post(`${RESOURCE_ROOT}/${id}/reject`, { comment });
+    return await decide(id, 'reject', comment);
 }
 
 export async function getApprover(params) {

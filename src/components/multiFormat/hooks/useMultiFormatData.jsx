@@ -11,11 +11,14 @@ import { notifySuccess } from '../../../utils/messages';
 export default function useMultiFormatData(params) {
     const { t } = useTranslation();
     const [dataSource, setDataSource] = useState([]);
+    const [pagination, setPagination] = useState({ page: 1, pageSize: 10, totalCount: 0 });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
     // Evita setState sobre un componente desmontado (StrictMode / navegacion rapida)
     const isMounted = useRef(true);
+    // Solo la respuesta de la ultima consulta actualiza la tabla
+    const latestRequest = useRef(0);
     useEffect(() => {
         isMounted.current = true;
         return () => {
@@ -26,23 +29,30 @@ export default function useMultiFormatData(params) {
     const paramsKey = JSON.stringify(params ?? {});
 
     const fetchData = useCallback(() => {
+        const requestId = ++latestRequest.current;
+        const isCurrent = () => isMounted.current && requestId === latestRequest.current;
+
         setLoading(true);
         setError(null);
         return getAll(JSON.parse(paramsKey))
             .then((response) => {
-                if (!isMounted.current) return;
-                const rows = Array.isArray(response?.data)
-                    ? response.data
-                    : (response?.data?.items ?? []);
-                setDataSource(rows.map(toRow));
+                if (!isCurrent()) return;
+                const { items, page, pageSize, totalCount } = response.data;
+                setDataSource(items.map(toRow));
+                setPagination({
+                    page: page ?? 1,
+                    pageSize: pageSize ?? items.length,
+                    totalCount: totalCount ?? items.length,
+                });
             })
             .catch((err) => {
-                if (!isMounted.current) return;
+                if (!isCurrent()) return;
                 setError(err);
+                setDataSource([]);
                 displayError(err);
             })
             .finally(() => {
-                if (isMounted.current) setLoading(false);
+                if (isCurrent()) setLoading(false);
             });
     }, [paramsKey]);
 
@@ -64,6 +74,7 @@ export default function useMultiFormatData(params) {
 
     return {
         dataSource,
+        pagination,
         loading,
         error,
         refresh: fetchData,

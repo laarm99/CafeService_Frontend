@@ -10,6 +10,8 @@ import HomePage from './pages/homePage/index.jsx'
 import MultiFormatGridPage from './pages/multiFormatPage/index.jsx'
 import MultiFormatDetailPage from './pages/multiFormatPage/[multiFormatId].jsx'
 import MultiFormatFormPage from './pages/addMultiFormatPage/index.jsx'
+import SupervisorsPage from './pages/supervisorsPage/index.jsx'
+import UsersPage from './pages/usersPage/index.jsx'
 import { App } from 'antd'
 import AppErrorBoundary from "./common/components/ErrorBoundary/AppErrorBoundary";
 import "./i18n.js"
@@ -40,17 +42,50 @@ createRoot(document.getElementById('root')).render(
                 {/* Formato Multiple */}
                 <Route
                   path="/multiFormat"
-                  element={<MultiFormatGridPage />}
+                  element={
+                    <ProtectedRouteComponent permission="canViewForms">
+                      <MultiFormatGridPage />
+                    </ProtectedRouteComponent>
+                  }
                 />
 
                 <Route
                   path="/multiFormat/new"
-                  element={<MultiFormatFormPage />}
+                  element={
+                    <ProtectedRouteComponent permission="canCreateForms">
+                      <MultiFormatFormPage />
+                    </ProtectedRouteComponent>
+                  }
                 />
 
                 <Route
                   path="/multiFormat/:multiFormatId"
-                  element={<MultiFormatDetailPage />}
+                  element={
+                    <ProtectedRouteComponent permission="canViewForms">
+                      <MultiFormatDetailPage />
+                    </ProtectedRouteComponent>
+                  }
+                />
+
+                {/* Configuracion (solo Admin). El backend tambien valida el rol. */}
+                <Route path="/configuration" element={<Navigate to="/configuration/supervisors" replace />} />
+
+                <Route
+                  path="/configuration/supervisors"
+                  element={
+                    <ProtectedRouteComponent permission="canManageSupervisors">
+                      <SupervisorsPage />
+                    </ProtectedRouteComponent>
+                  }
+                />
+
+                <Route
+                  path="/configuration/users"
+                  element={
+                    <ProtectedRouteComponent permission="canManageUsers">
+                      <UsersPage />
+                    </ProtectedRouteComponent>
+                  }
                 />
 
                 {/* Rutas anteriores: se conservan como redireccion para no romper enlaces guardados */}

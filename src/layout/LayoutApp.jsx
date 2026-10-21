@@ -14,13 +14,15 @@ import { useTranslation } from "react-i18next";
 import { getModuleItems } from "./LayoutItems.jsx";
 import LayoutSider from "./LayoutSider.jsx";
 import AppBreadcrumb from "./AppBreadcrumb.jsx";
+import usePermissions from "../pages/login/usePermissions";
 
 export default function AppLayout() {
   const { t } = useTranslation();
   const { logout } = useContext(AuthContext);
   const { message } = App.useApp();
   setMessageApi(message);
-  const moduleItems = getModuleItems(t);
+  const permissions = usePermissions();
+  const moduleItems = getModuleItems(t, permissions);
 
   return (
     <Layout className={styles.mainBackground}>

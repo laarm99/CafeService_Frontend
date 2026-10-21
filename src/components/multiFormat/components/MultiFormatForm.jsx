@@ -25,8 +25,17 @@ import useManagedEmployees from "../hooks/useManagedEmployees";
 import useMultiFormatRecord from "../hooks/useMultiFormatRecord";
 import useMultiFormatSubmit from "../hooks/useMultiFormatSubmit";
 import displayError from "../../../utils/display-errors";
+import usePermissions from "../../../pages/login/usePermissions";
 
 // La pestaña activa define el tipo de movimiento que se manda al backend.
+// Permiso necesario para ver cada pestaña (utils/permissions.js)
+const PERMISSION_BY_TAB = {
+    "1": "canViewDepartmentShiftChange",
+    "2": "canCreateVacation",
+    "3": "canCreatePermission",
+    "4": "canCreateTimeAdjustment",
+};
+
 const MOVEMENT_TYPE_BY_TAB = {
     "1": "CHANGE_DEP_SHIFT",
     "2": "VACATION",
@@ -81,7 +90,13 @@ export default function MultiFormatForm({ id = null }) {
 
     const [selectedEmployee, setSelectedEmployee] = useState(null);
     const [pendingEmployeeId, setPendingEmployeeId] = useState(null);
-    const [activeTab, setActiveTab] = useState("1");
+    const permissions = usePermissions();
+    const allowedTabs = Object.keys(PERMISSION_BY_TAB).filter(
+        (key) => permissions[PERMISSION_BY_TAB[key]]
+    );
+    const [selectedTab, setActiveTab] = useState("1");
+    // Si la pestaña elegida no esta permitida, se usa la primera disponible
+    const activeTab = allowedTabs.includes(selectedTab) ? selectedTab : (allowedTabs[0] ?? selectedTab);
 
     const { employee, loading: employeeLoading } = useCurrentEmployee();
     const {
@@ -177,6 +192,10 @@ export default function MultiFormatForm({ id = null }) {
         }
 
         const movementType = MOVEMENT_TYPE_BY_TAB[activeTab];
+        if (!allowedTabs.includes(activeTab)) {
+            displayError(new Error(t("forbidden.message")));
+            return;
+        }
         if (
             movementType === "CHANGE_DEP_SHIFT"
             && (
@@ -333,7 +352,7 @@ export default function MultiFormatForm({ id = null }) {
                                     children: <TimeAdjustmentForm />,
                                     icon: <ClockCircleOutlined />,
                                 },
-                            ]}
+                            ].filter((item) => allowedTabs.includes(item.key))}
                         />
                     </Card>
                 </Form>

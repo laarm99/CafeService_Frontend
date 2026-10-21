@@ -17,6 +17,22 @@ import styles from "./styles/AppBreadcrumb.module.css";
 //               { labelKey } o { folio: true }, y "to" si debe ser clicable.
 const BREADCRUMB_TRAILS = [
     {
+        path: "/configuration/supervisors",
+        backTo: "/homePage",
+        trail: [
+            { labelKey: "layoutItems.configuration" },
+            { labelKey: "layoutItems.supervisors" },
+        ],
+    },
+    {
+        path: "/configuration/users",
+        backTo: "/homePage",
+        trail: [
+            { labelKey: "layoutItems.configuration" },
+            { labelKey: "layoutItems.users" },
+        ],
+    },
+    {
         path: "/multiFormat/new",
         backTo: "/homePage",
         trail: [{ labelKey: "multiFormat.title.create" }],

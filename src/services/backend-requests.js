@@ -56,6 +56,10 @@ export async function put(relative_url, body, config = {}) {
     return await apiClient.put(relative_url, body, config);
 }
 
+export async function patch(relative_url, body, config = {}) {
+    return await apiClient.patch(relative_url, body, config);
+}
+
 export async function del(relative_url, config = {}) {
     return await apiClient.delete(relative_url, config);
 }

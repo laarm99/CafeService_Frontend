@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { getHomeModules, getModuleColors } from "../../../layout/modules";
 import styles from "../styles/homePageGrid.module.css";
+import usePermissions from "../../../pages/login/usePermissions";
 
 // Accesos rapidos del home.
 // Se generan desde la misma definicion que el menu lateral, con un grid
@@ -10,7 +11,8 @@ export default function HomePageGrid() {
     const { t } = useTranslation();
     const navigate = useNavigate();
 
-    const modules = getHomeModules();
+    const permissions = usePermissions();
+    const modules = getHomeModules(permissions);
 
     return (
         <div className={styles.homeWrapper}>
