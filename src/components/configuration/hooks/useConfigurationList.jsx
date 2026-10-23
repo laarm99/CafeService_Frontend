@@ -62,7 +62,7 @@ export default function useConfigurationList(fetcher) {
     }, [refresh]);
 
     // Devuelve true si la operacion termino bien. Ignora envios mientras hay otro en proceso.
-    const mutate = useCallback(async (id, operation) => {
+    const mutate = useCallback(async (id, operation, onError) => {
         if (busy.current) return false;
 
         busy.current = true;
@@ -72,7 +72,8 @@ export default function useConfigurationList(fetcher) {
             await refresh();
             return true;
         } catch (error) {
-            handleError(error);
+            if (onError) onError(error);
+            else handleError(error);
             return false;
         } finally {
             busy.current = false;

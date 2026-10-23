@@ -30,7 +30,15 @@ export default function UsersGrid() {
     const { dataSource, loading, processingId, mutate } = useConfigurationList(getUsers);
 
     const [editing, setEditing] = useState(null);
+    const [saveError, setSaveError] = useState(null);
     const processing = processingId !== null;
+
+    const errorText = (error) => {
+        const data = error?.response?.data;
+        const fieldMessages = data?.errors ? Object.values(data.errors).flat() : [];
+        return data?.message || fieldMessages.join(" ") || data?.title || error?.message
+            || t("configuration.errors.generic", { defaultValue: "No se pudo guardar el cambio." });
+    };
 
     const roleLabel = (role) => (role ? t(`configuration.roles.${role}`, { defaultValue: role }) : "-");
     const isSelf = (record) => sameUser(record?.domainUserName, auth?.user?.domainUserName);
@@ -40,18 +48,25 @@ export default function UsersGrid() {
 
     const openRole = (record) => {
         setEditing(record);
-        // Backend devuelve roles como array; seleccionar el primero como default (por ahora)
-        form.setFieldsValue({ role: record.roles?.[0] || undefined });
+        setSaveError(null);
+        // Backend devuelve roles como array
+        form.setFieldsValue({ roles: record.roles || [] });
     };
 
     const closeRole = () => {
         if (processing) return;
         setEditing(null);
+        setSaveError(null);
         form.resetFields();
     };
 
-    const saveRole = async (role) => {
-        const ok = await mutate(editing.id, () => updateUserRole(editing.id, role));
+    const saveRole = async (roles) => {
+        setSaveError(null);
+        const ok = await mutate(
+            editing.id,
+            () => updateUserRole(editing.id, roles),
+            (error) => setSaveError(errorText(error)),
+        );
         if (ok) {
             notifySuccess(t("configuration.users.roleUpdated"));
             setEditing(null);
@@ -59,10 +74,15 @@ export default function UsersGrid() {
         }
     };
 
-    // Confirmacion antes de cambiar el rol (con advertencia si es el propio usuario)
-    const handleRoleSubmit = ({ role }) => {
-        const currentRole = editing.roles?.[0];
-        if (!role || role === currentRole) {
+    // Confirmacion antes de cambiar los roles (con advertencia si es el propio usuario)
+    const handleRoleSubmit = ({ roles }) => {
+        const currentRoles = editing.roles || [];
+
+        // Comparar arrays de roles
+        const rolesChanged = roles.length !== currentRoles.length ||
+            !roles.every(r => currentRoles.includes(r));
+
+        if (!roles || roles.length === 0 || !rolesChanged) {
             setEditing(null);
             form.resetFields();
             return;
@@ -75,7 +95,7 @@ export default function UsersGrid() {
                     <p>
                         {t("configuration.users.roleConfirmDescription", {
                             name: editing.fullName,
-                            role: roleLabel(role),
+                            role: roles.map(r => roleLabel(r)).join(", "),
                         })}
                     </p>
                     {isSelf(editing) && (
@@ -85,7 +105,7 @@ export default function UsersGrid() {
             ),
             okText: t("configuration.confirm"),
             cancelText: t("configuration.cancel"),
-            onOk: () => saveRole(role),
+            onOk: () => saveRole(roles),
         });
     };
 
@@ -213,13 +233,17 @@ export default function UsersGrid() {
                     />
                 )}
 
+                {saveError && (
+                    <Alert type="error" showIcon message={saveError} style={{ marginBottom: 16 }} />
+                )}
+
                 <Form form={form} layout="vertical" onFinish={handleRoleSubmit} disabled={processing}>
                     <Form.Item
-                        name="role"
+                        name="roles"
                         label={t("configuration.users.role")}
                         rules={[{ required: true, message: t("configuration.validation.roleRequired") }]}
                     >
-                        <Select options={roleOptions} />
+                        <Select mode="multiple" options={roleOptions} />
                     </Form.Item>
                 </Form>
             </Modal>

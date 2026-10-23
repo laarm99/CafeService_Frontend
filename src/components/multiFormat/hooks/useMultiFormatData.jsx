@@ -1,15 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { getAll, remove as removeRequest } from '../api/MultiFormatApi';
+import { getAll } from '../api/MultiFormatApi';
 import { toRow } from '../mappers/multiFormat.mapper';
 import displayError from '../../../utils/display-errors';
-import { notifySuccess } from '../../../utils/messages';
 
-// Reemplaza al hook que devolvia el arreglo hardcodeado.
-// Conserva la firma anterior ({ dataSource }) y agrega loading, error,
-// refresh y removeRecord.
+// Devuelve el listado paginado con loading, error y refresh.
 export default function useMultiFormatData(params) {
-    const { t } = useTranslation();
     const [dataSource, setDataSource] = useState([]);
     const [pagination, setPagination] = useState({ page: 1, pageSize: 10, totalCount: 0 });
     const [loading, setLoading] = useState(false);
@@ -60,17 +55,6 @@ export default function useMultiFormatData(params) {
         fetchData();
     }, [fetchData]);
 
-    const removeRecord = useCallback((id) => (
-        removeRequest(id)
-            .then(() => {
-                notifySuccess(t('multiFormat.messages.deleted'));
-                return fetchData().then(() => true);
-            })
-            .catch((err) => {
-                displayError(err);
-                return false;
-            })
-    ), [fetchData, t]);
 
     return {
         dataSource,
@@ -78,6 +62,5 @@ export default function useMultiFormatData(params) {
         loading,
         error,
         refresh: fetchData,
-        removeRecord,
     };
 }

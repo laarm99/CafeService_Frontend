@@ -24,7 +24,7 @@ import useMultiFormatApproval from "../hooks/useMultiFormatApproval";
 // - No puede ser su propia solicitud
 export default function MultiFormatApprovalActions({ record, onDone }) {
     const { t } = useTranslation();
-    const { approveRecord, rejectRecord, processing } = useMultiFormatApproval();
+    const { approveRecord, rejectRecord, processing, error, clearError } = useMultiFormatApproval();
 
     const [action, setAction] = useState(null); // 'approve' | 'reject'
     const [comment, setComment] = useState("");
@@ -36,6 +36,7 @@ export default function MultiFormatApprovalActions({ record, onDone }) {
         setAction(null);
         setComment("");
         setCommentError(null);
+        clearError();
     };
 
     const handleConfirm = async () => {
@@ -118,6 +119,15 @@ export default function MultiFormatApprovalActions({ record, onDone }) {
                         type="error"
                         showIcon
                         message={commentError}
+                        style={{ marginTop: 12 }}
+                    />
+                )}
+
+                {error && (
+                    <Alert
+                        type="error"
+                        showIcon
+                        message={error}
                         style={{ marginTop: 12 }}
                     />
                 )}

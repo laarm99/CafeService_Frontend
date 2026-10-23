@@ -1,0 +1,54 @@
+.filters :global(.ant-input-affix-wrapper),
+.filters :global(.ant-select-selector),
+.filters :global(.ant-picker) {
+  min-height: 44px;
+  background: rgba(255, 255, 255, 0.7) !important;
+  backdrop-filter: blur(12px);
+  border-radius: 14px !important;
+  border: 1px solid rgba(22, 40, 82, 0.1) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  transition: all 0.25s ease;
+}
+
+.filters :global(.ant-select) {
+  width: 100%;
+}
+
+.filters :global(.ant-select-single .ant-select-selector) {
+  align-items: center;
+}
+
+.filters :global(.ant-input-affix-wrapper:hover),
+.filters :global(.ant-select:hover .ant-select-selector),
+.filters :global(.ant-picker:hover) {
+  border-color: #fb8421 !important;
+}
+
+.filters :global(.ant-input-affix-wrapper-focused),
+.filters :global(.ant-select-focused .ant-select-selector),
+.filters :global(.ant-picker-focused) {
+  border-color: #fb8421 !important;
+  box-shadow: 0 0 0 4px rgba(251, 132, 33, 0.15) !important;
+}
+
+.filters :global(.ant-input-affix-wrapper .ant-input) {
+  background: transparent !important;
+}
+
+.filters :global(.ant-input-prefix) {
+  color: #162852;
+  margin-inline-end: 8px;
+}
+
+.filters :global(.ant-btn) {
+  height: 44px;
+  border-radius: 14px;
+  font-weight: 600;
+  color: #162852;
+  border-color: rgba(22, 40, 82, 0.15);
+}
+
+.filters :global(.ant-btn:not(:disabled):hover) {
+  color: #fb8421;
+  border-color: #fb8421;
+}

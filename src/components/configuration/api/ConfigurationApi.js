@@ -36,8 +36,9 @@ export async function getUsers() {
     return unwrap(await get(USERS), 'array');
 }
 
-export async function updateUserRole(id, role) {
-    return unwrap(await put(`${USERS}/${encodeURIComponent(id)}/roles`, { roles: [role] }));
+export async function updateUserRole(id, roles) {
+    const rolesArray = Array.isArray(roles) ? roles : [roles];
+    return unwrap(await put(`${USERS}/${encodeURIComponent(id)}/roles`, { roles: rolesArray }));
 }
 
 export async function setUserStatus(id, isActive) {

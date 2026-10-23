@@ -10,6 +10,7 @@ const DISPLAY_DATE = "DD/MM/YYYY";
 const STATUS_COLORS = {
     SUBMITTED: 'blue',
     APPROVED: 'green',
+    COMPLETED: 'cyan',
     REJECTED: 'red',
     IN_REVIEW: 'blue',
     PENDING: 'orange',

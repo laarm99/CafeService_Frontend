@@ -3,7 +3,7 @@ import { AuthContext } from "../pages/login/AuthProvider";
 import { App } from 'antd'
 import { Layout } from 'antd';
 import { Outlet } from 'react-router-dom';
-import { Content, Header } from "antd/es/layout/layout";
+import { Content, Footer, Header } from "antd/es/layout/layout";
 import { LogoutOutlined } from '@ant-design/icons';
 import { setMessageApi } from "../services/notificationService";
 import wernerLogo from "../assets/img/logo.png";
@@ -72,6 +72,9 @@ export default function AppLayout() {
           <AppBreadcrumb />
           <Outlet />
         </Content>
+        <Footer className={styles.footerStyle}>
+          {t("layoutapp.footer", { year: new Date().getFullYear() })}
+        </Footer>
       </Layout>
 
     </Layout>

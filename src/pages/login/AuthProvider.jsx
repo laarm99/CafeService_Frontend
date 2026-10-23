@@ -54,7 +54,7 @@ export default function AuthProvider({ children }) {
 
         // Se guarda como referencia para solicitar la
         // validación al recargar, no como prueba de acceso.
-        localStorage.setItem("user", JSON.stringify(user));
+        sessionStorage.setItem("user", JSON.stringify(user));
 
         setAuth({
             isAuthenticated: true,
@@ -67,7 +67,7 @@ export default function AuthProvider({ children }) {
     const logout = useCallback(() => {
         sessionVersion.current += 1;
 
-        localStorage.removeItem("user");
+        sessionStorage.removeItem("user");
 
         setAuth(EMPTY_AUTH);
         setLoading(false);
@@ -86,7 +86,7 @@ export default function AuthProvider({ children }) {
 
         async function restoreSession() {
             try {
-                const storedUser = localStorage.getItem("user");
+                const storedUser = sessionStorage.getItem("user");
 
                 // Sin una sesión previa, se conserva la pantalla
                 // de login. No iniciar sesión automáticamente.
@@ -131,7 +131,7 @@ export default function AuthProvider({ children }) {
 
                 // Reemplazar la copia local por los datos
                 // que acaba de devolver el backend.
-                localStorage.setItem(
+                sessionStorage.setItem(
                     "user",
                     JSON.stringify(user)
                 );
@@ -144,7 +144,7 @@ export default function AuthProvider({ children }) {
                 // Si no se puede validar el acceso, no restaurarlo.
                 // Incluye acceso denegado y problemas de conexión.
                 if (isCurrentRequest()) {
-                    localStorage.removeItem("user");
+                    sessionStorage.removeItem("user");
                     setAuth(EMPTY_AUTH);
                 }
             } finally {

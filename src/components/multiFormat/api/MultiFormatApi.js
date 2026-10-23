@@ -1,14 +1,7 @@
 // Unico punto de contacto con el backend para Formato Multiple.
-// La creacion de solicitudes usa los endpoints reales; las demas operaciones
-// conservan el modo mock controlado por VITE_USE_MOCKS.
+// Todas las operaciones usan los endpoints reales del backend.
 
-import { get, post, put, del } from '../../../services/backend-requests';
-import {
-    updateMock,
-    removeMock,
-    getApproverMock,
-    getCatalogsMock,
-} from '../mocks/multiFormat.mock';
+import { get, post } from '../../../services/backend-requests';
 import { toDetailRecord, toPayload } from '../mappers/multiFormat.mapper';
 
 const RESOURCE_ROOT = 'MultiFormat';
@@ -19,9 +12,6 @@ const CREATE_ENDPOINTS = {
     TIME_ADJUSTMENT: 'time-adjustment-request/create-time-adjustment-request',
     VACATION: 'vacation-request/create-vacation-request',
 };
-
-// .env -> VITE_USE_MOCKS=true (demo) | false (backend real)
-export const USE_MOCKS = String(import.meta.env.VITE_USE_MOCKS ?? 'true') === 'true';
 
 export async function getAll(params = {}) {
     const response = await get(FORM_REQUESTS_ENDPOINT, { params });
@@ -131,6 +121,7 @@ async function buildCreateRequest(values) {
     } else if (movementType === 'PERMISSION') {
         endpoint = CREATE_ENDPOINTS.PERMISSION;
         request = {
+            employeeId: values.employeeId,
             permissionType: values.permissionType,
             startDate: values.permissionStartDate,
             endDate: values.permissionEndDate,
@@ -155,7 +146,14 @@ async function buildCreateRequest(values) {
         throw new Error(`Tipo de formato no soportado: ${movementType ?? 'sin especificar'}.`);
     }
 
-    return { endpoint, payload: toPayload(omitUndefined(request)) };
+    const payload = toPayload(omitUndefined(request));
+    // toPayload solo conserva metadatos de adjuntos; en la creacion se
+    // envia el contenido (base64) para que el backend guarde el archivo.
+    if (movementType === 'PERMISSION' && Array.isArray(request.attachments)) {
+        payload.attachments = request.attachments;
+    }
+
+    return { endpoint, payload };
 }
 
 export async function create(values) {
@@ -176,14 +174,23 @@ export async function create(values) {
     return response;
 }
 
-export async function update(id, payload) {
-    if (USE_MOCKS) return updateMock(id, payload);
-    return await put(`${RESOURCE_ROOT}/${id}`, payload);
+// La edicion no esta soportada: la solicitud se cancela y se vuelve a crear.
+export async function update() {
+    throw new Error('La edicion de solicitudes no esta soportada.');
 }
 
-export async function remove(id) {
-    if (USE_MOCKS) return removeMock(id);
-    return await del(`${RESOURCE_ROOT}/${id}`);
+// El creador cancela su propia solicitud mientras siga en estado Enviado.
+export async function cancel(id) {
+    const response = await post(`${FORM_REQUESTS_ENDPOINT}/${encodeURIComponent(id)}/cancel`, {});
+    const result = response.data;
+
+    if (result?.isSuccess !== true) {
+        const error = new Error(result?.message || 'No fue posible cancelar la solicitud.');
+        error.response = { status: result?.statusCode ?? response.status, data: result };
+        throw error;
+    }
+
+    return await getById(id);
 }
 
 // --- Acciones del aprobador -------------------------------------------------
@@ -216,14 +223,60 @@ export async function reject(id, comment) {
     return await decide(id, 'reject', comment);
 }
 
-export async function getApprover(params) {
-    if (USE_MOCKS) return getApproverMock(params);
-    return await get(`${RESOURCE_ROOT}/approver`);
+// El Admin marca como terminada una solicitud aprobada por el supervisor.
+export async function complete(id) {
+    const response = await post(`${FORM_REQUESTS_ENDPOINT}/${encodeURIComponent(id)}/complete`, {});
+    const result = response.data;
+
+    if (result?.isSuccess !== true) {
+        const error = new Error(result?.message || 'No fue posible completar la operacion.');
+        error.response = { status: result?.statusCode ?? response.status, data: result };
+        throw error;
+    }
+
+    return await getById(id);
 }
 
-export async function getCatalogs() {
-    if (USE_MOCKS) return getCatalogsMock();
-    return await get(`${RESOURCE_ROOT}/catalogs`);
+// Descarga el PDF del formato (solo Admin; aprobado o completado).
+// Con responseType 'blob' el cuerpo del error llega como Blob: se vuelve a leer como JSON.
+async function rethrowBlobError(error) {
+    const data = error?.response?.data;
+    if (data instanceof Blob) {
+        try {
+            error.response.data = JSON.parse(await data.text());
+        } catch {
+            error.response.data = null;
+        }
+    }
+    throw error;
+}
+
+function saveBlob(blob, fileName) {
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+}
+
+export async function downloadAttachment(requestId, attachment) {
+    const response = await get(
+        `${FORM_REQUESTS_ENDPOINT}/${encodeURIComponent(requestId)}/attachments/${encodeURIComponent(attachment.id)}`,
+        { responseType: 'blob' }
+    ).catch(rethrowBlobError);
+    saveBlob(response.data, attachment.name || attachment.fileName || 'adjunto');
+}
+
+export async function downloadPdf(id) {
+    const response = await get(
+        `${FORM_REQUESTS_ENDPOINT}/${encodeURIComponent(id)}/pdf`,
+        { responseType: 'blob', headers: { Accept: 'application/pdf' } }
+    ).catch(rethrowBlobError);
+
+    saveBlob(response.data, `formato-multiple-${id}.pdf`);
 }
 
 export async function getCurrentEmployee() {

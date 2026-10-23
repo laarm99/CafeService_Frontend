@@ -1,6 +1,7 @@
 import { Card, Col, DatePicker, Form, Input, Radio, Row, TimePicker } from "antd";
 import { useTranslation } from "react-i18next";
 import styles from "../styles/MultiFormatForm.module.css";
+import { disabledFutureAndCutoff } from "../../../utils/date-rules";
 
 const DISPLAY_DATE = "DD/MM/YYYY";
 const MISSING_PUNCH_TYPE = {
@@ -24,6 +25,7 @@ export default function TimeAdjustmentForm() {
                     >
                         <DatePicker
                             format={DISPLAY_DATE}
+                            disabledDate={disabledFutureAndCutoff}
                             style={{ width: "100%" }}
                             className={styles.modernInput}
                         />

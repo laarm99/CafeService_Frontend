@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, Col, Form, Popconfirm, Row, Skeleton, Tabs, Typography } from "antd";
+import { Alert, Card, Col, Form, Popconfirm, Row, Skeleton, Tabs, Typography } from "antd";
 import {
     FileProtectOutlined,
     FileTextOutlined,
@@ -58,12 +58,14 @@ const FIELDS_BY_MOVEMENT = {
         "newArea",
     ],
     VACATION: [
+        "employeeId",
         "vacationDays",
         "vacationStartDate",
         "vacationEndDate",
         "vacationReturnDate",
     ],
     PERMISSION: [
+        "employeeId",
         "permissionType",
         "permissionDays",
         "permissionStartDate",
@@ -73,6 +75,7 @@ const FIELDS_BY_MOVEMENT = {
         "attachments",
     ],
     TIME_ADJUSTMENT: [
+        "employeeId",
         "adjustmentDate",
         "missingPunchType",
         "entryTime",
@@ -110,7 +113,7 @@ export default function MultiFormatForm({ id = null }) {
         retry: retryManagedEmployees,
     } = useManagedEmployees();
 
-    const { submit, submitting, isEdit } = useMultiFormatSubmit({
+    const { submit, submitting, isEdit, error: submitError, clearError } = useMultiFormatSubmit({
         form,
         id,
         // Al enviar, se redirige al detalle del formato recien creado
@@ -218,6 +221,11 @@ export default function MultiFormatForm({ id = null }) {
             if (values[field] !== undefined) acc[field] = values[field];
             return acc;
         }, {});
+
+        // Para movimientos que no son CHANGE_DEP_SHIFT, asegurar que employeeId sea del usuario actual
+        if (movementType !== "CHANGE_DEP_SHIFT" && !movementValues.employeeId) {
+            movementValues.employeeId = employee.id;
+        }
 
         submit({
             ...movementValues,
@@ -356,6 +364,17 @@ export default function MultiFormatForm({ id = null }) {
                         />
                     </Card>
                 </Form>
+
+                {submitError && (
+                    <Alert
+                        type="error"
+                        showIcon
+                        closable
+                        message={submitError}
+                        onClose={clearError}
+                        style={{ marginTop: 16 }}
+                    />
+                )}
 
                 {/* Enviar al aprobador. Mientras no se confirme, el usuario
                     puede seguir modificando el formato. */}

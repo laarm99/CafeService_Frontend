@@ -39,6 +39,12 @@
 
 } */
 
+.siderStyle :global(.ant-menu:not(.ant-menu-inline-collapsed) .ant-menu-title-content) {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 /* Menú expandido */
 .siderStyle :global(.ant-menu:not(.ant-menu-inline-collapsed) .ant-menu-item) {
     margin: 6px 12px !important;

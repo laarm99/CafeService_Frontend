@@ -8,6 +8,7 @@ import DefaultTable from "../../common/defaultTable";
 import useMultiFormatColumns from "../hooks/useMultiformatColumns";
 import useMultiFormatData from "../hooks/useMultiFormatData";
 import { FORM_TYPE_BY_ID, STATUS_BY_ID } from "../mappers/multiFormat.mapper";
+import styles from "../styles/MultiFormatGrid.module.css";
 
 const API_DATE = "YYYY-MM-DD";
 const SEARCH_DEBOUNCE_MS = 400;
@@ -61,10 +62,12 @@ export default function MultiFormatGrid() {
         setQuery(INITIAL_QUERY);
     };
 
-    const typeOptions = Object.entries(FORM_TYPE_BY_ID).map(([id, code]) => ({
-        value: Number(id),
-        label: t(`multiFormat.movement.${code}`),
-    }));
+    const typeOptions = Object.entries(FORM_TYPE_BY_ID)
+        .filter(([, code]) => code !== "CHANGE_DEP_SHIFT")
+        .map(([id, code]) => ({
+            value: Number(id),
+            label: t(`multiFormat.movement.${code}`),
+        }));
 
     const statusOptions = Object.entries(STATUS_BY_ID).map(([id, code]) => ({
         value: Number(id),
@@ -84,43 +87,11 @@ export default function MultiFormatGrid() {
 
     return (
         <>
-            <Row gutter={[12, 12]} style={{ marginBottom: 16 }}>
-                <Col xs={24} md={12} lg={5}>
-                    <Select
-                        allowClear
-                        style={{ width: "100%" }}
-                        placeholder={t("multiFormat.filters.type")}
-                        options={typeOptions}
-                        value={query.formType}
-                        onChange={(value) => changeFilter({ formType: value })}
-                    />
-                </Col>
-
-                <Col xs={24} md={12} lg={5}>
-                    <Select
-                        allowClear
-                        style={{ width: "100%" }}
-                        placeholder={t("multiFormat.filters.status")}
-                        options={statusOptions}
-                        value={query.status}
-                        onChange={(value) => changeFilter({ status: value })}
-                    />
-                </Col>
-
-                <Col xs={24} md={12} lg={6}>
-                    <DatePicker.RangePicker
-                        allowClear
-                        style={{ width: "100%" }}
-                        format="DD/MM/YYYY"
-                        presets={rangePresets}
-                        value={query.range}
-                        onChange={(value) => changeFilter({ range: value })}
-                    />
-                </Col>
-
-                <Col xs={24} md={12} lg={6}>
+            <Row gutter={[12, 12]} className={styles.filters} style={{ marginBottom: 16 }}>
+                <Col xs={24} md={12} lg={7}>
                     <Input
                         allowClear
+                        size="large"
                         prefix={<SearchOutlined />}
                         placeholder={t("multiFormat.filters.searchPlaceholder")}
                         value={searchText}
@@ -129,7 +100,41 @@ export default function MultiFormatGrid() {
                     />
                 </Col>
 
-                <Col xs={24} lg={2}>
+                <Col xs={24} md={12} lg={5}>
+                    <Select
+                        allowClear
+                        size="large"
+                        placeholder={t("multiFormat.filters.type")}
+                        options={typeOptions}
+                        value={query.formType}
+                        onChange={(value) => changeFilter({ formType: value })}
+                    />
+                </Col>
+
+                <Col xs={24} md={12} lg={4}>
+                    <Select
+                        allowClear
+                        size="large"
+                        placeholder={t("multiFormat.filters.status")}
+                        options={statusOptions}
+                        value={query.status}
+                        onChange={(value) => changeFilter({ status: value })}
+                    />
+                </Col>
+
+                <Col xs={24} md={12} lg={5}>
+                    <DatePicker.RangePicker
+                        allowClear
+                        size="large"
+                        style={{ width: "100%" }}
+                        format="DD/MM/YYYY"
+                        presets={rangePresets}
+                        value={query.range}
+                        onChange={(value) => changeFilter({ range: value })}
+                    />
+                </Col>
+
+                <Col xs={24} lg={3}>
                     <Button
                         block
                         icon={<ClearOutlined />}

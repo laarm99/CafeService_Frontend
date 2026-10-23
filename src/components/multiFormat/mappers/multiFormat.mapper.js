@@ -16,11 +16,11 @@ export const FORM_TYPE_BY_ID = {
 };
 
 export const STATUS_BY_ID = {
-    1: 'DRAFT',
     2: 'SUBMITTED',
     3: 'APPROVED',
     4: 'REJECTED',
     5: 'CANCELLED',
+    6: 'COMPLETED',
 };
 
 const isTimeField = (key = '') => /time$/i.test(key);

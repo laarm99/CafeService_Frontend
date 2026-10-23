@@ -20,6 +20,8 @@ const NO_PERMISSIONS = {
     canCreateTimeAdjustment: false,
     canViewDepartmentShiftChange: false,
     canApproveRequests: false,
+    canCompleteRequests: false,
+    canDownloadPdf: false,
     hasMultipleRoles: false,
     requiresApprovalForOwnRequest: false,
 };
@@ -57,15 +59,18 @@ export function getPermissions(user) {
 
     return {
         canViewForms: true,
-        canCreateForms: isSupervisor || isGeneral,
+        canCreateForms: isGeneral,
         canViewConfiguration: isAdmin,
         canManageSupervisors: isAdmin,
         canManageUsers: isAdmin,
         canCreateVacation: isGeneral,
         canCreatePermission: isGeneral,
         canCreateTimeAdjustment: isGeneral,
-        canViewDepartmentShiftChange: isSupervisor,
+        // Cambio de depto/turno deshabilitado temporalmente (el cliente lo esta evaluando).
+        canViewDepartmentShiftChange: false,
         canApproveRequests: isSupervisor,
+        canCompleteRequests: isAdmin,
+        canDownloadPdf: isAdmin,
         hasMultipleRoles,
         requiresApprovalForOwnRequest,
     };

@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { approve, reject } from '../api/MultiFormatApi';
-import displayError from '../../../utils/display-errors';
+import { getErrorMessage } from '../../../utils/display-errors';
 import { notifySuccess } from '../../../utils/messages';
 
 // Acciones del aprobador: Aprobar (comentario opcional) y
@@ -10,15 +10,17 @@ import { notifySuccess } from '../../../utils/messages';
 export default function useMultiFormatApproval() {
     const { t } = useTranslation();
     const [processing, setProcessing] = useState(false);
+    const [error, setError] = useState(null);
 
     const runAction = useCallback(async (action, id, comment, successKey) => {
         setProcessing(true);
+        setError(null);
         try {
             const response = await action(id, comment);
             notifySuccess(t(successKey));
             return response?.data ?? null;
         } catch (err) {
-            displayError(err);
+            setError(getErrorMessage(err));
             return null;
         } finally {
             setProcessing(false);
@@ -35,5 +37,5 @@ export default function useMultiFormatApproval() {
         [runAction]
     );
 
-    return { approveRecord, rejectRecord, processing };
+    return { approveRecord, rejectRecord, processing, error, clearError: () => setError(null) };
 }

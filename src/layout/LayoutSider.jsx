@@ -13,7 +13,7 @@ export default function LayoutSider({ moduleItems }) {
                 collapsible
                 collapsed={collapsed}
                 collapsedWidth={70}
-                //width={250}
+                width={280}
                 onMouseEnter={() => setCollapsed(false)}
                 onMouseLeave={() => setCollapsed(true)}               
             >

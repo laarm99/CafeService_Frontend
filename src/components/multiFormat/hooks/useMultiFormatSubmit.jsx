@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { create, update } from '../api/MultiFormatApi';
 import { toPayload } from '../mappers/multiFormat.mapper';
-import displayError from '../../../utils/display-errors';
+import { getErrorMessage } from '../../../utils/display-errors';
 import { notifySuccess } from '../../../utils/messages';
 import { formatErrorsToFormFields } from '../../../utils/response-utils';
 
@@ -12,12 +12,14 @@ import { formatErrorsToFormFields } from '../../../utils/response-utils';
 // redirectTo puede ser una cadena o una funcion (record) => ruta.
 export default function useMultiFormatSubmit({ form, id = null, redirectTo = null } = {}) {
     const [submitting, setSubmitting] = useState(false);
+    const [error, setError] = useState(null);
     const navigate = useNavigate();
     const { t } = useTranslation();
     const isEdit = Boolean(id);
 
     const submit = useCallback((values) => {
         setSubmitting(true);
+        setError(null);
         return Promise.resolve()
             .then(() => isEdit
                 ? update(id, toPayload(values))
@@ -50,7 +52,7 @@ export default function useMultiFormatSubmit({ form, id = null, redirectTo = nul
                     form.setFields(fieldErrors);
                 }
 
-                displayError(err);
+                setError(getErrorMessage(err));
                 return null;
             })
             .finally(() => {
@@ -58,5 +60,5 @@ export default function useMultiFormatSubmit({ form, id = null, redirectTo = nul
             });
     }, [form, id, isEdit, navigate, redirectTo, t]);
 
-    return { submit, submitting, isEdit };
+    return { submit, submitting, isEdit, error, clearError: () => setError(null) };
 }
