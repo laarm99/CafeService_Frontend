@@ -114,6 +114,8 @@ padding: 24px;
     inset 0 1px 1px rgba(255, 255, 255, 0.35);
 
   transition: all .3s ease;
+  min-width: stretch;
+  
 }
 
 .contentDesign :global(.ant-descriptions-item-label) {
