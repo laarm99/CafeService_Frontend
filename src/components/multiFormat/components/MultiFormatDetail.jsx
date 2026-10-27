@@ -28,7 +28,7 @@ const STATUS_COLORS = {
     APPROVED: "green",
     COMPLETED: "cyan",
     REJECTED: "red",
-    CANCELLED: "default",
+    CANCELLED: "gray",
     IN_REVIEW: "blue",
     PENDING: "orange",
 };
@@ -331,16 +331,16 @@ export default function MultiFormatDetail({ id: idProp = null }) {
                                 </Col>
 
                                 {isOwnRecord && (
-                                <Col xs={24} md={5}>
-                                    <Typography.Text type="secondary">
-                                        {t("multiFormat.grid.approver")}
-                                    </Typography.Text>
-                                    <div>
-                                        <Typography.Text strong>
-                                            {value(record.approver?.name)}
+                                    <Col xs={24} md={5}>
+                                        <Typography.Text type="secondary">
+                                            {t("multiFormat.grid.approver")}
                                         </Typography.Text>
-                                    </div>
-                                </Col>
+                                        <div>
+                                            <Typography.Text strong>
+                                                {value(record.approver?.name)}
+                                            </Typography.Text>
+                                        </div>
+                                    </Col>
                                 )}
 
                                 <Col xs={24} md={4}>
@@ -364,15 +364,16 @@ export default function MultiFormatDetail({ id: idProp = null }) {
                             className={styles.modernCardEmployeData}
                             title={t("multiFormat.employee.section")}
                         >
-                            <Descriptions column={{ xs: 1, md: 3 }} bordered size="small">
+                            <Descriptions className={styles.employeeDescriptions}
+                                column={{ xs: 1, sm: 1, md: 3 }} bordered size="small">
                                 <Descriptions.Item label={t("multiFormat.employee.clockNumber")}>
-                                    {value(record.clockNumber)}
+                                    <span className={styles.noWrap}>{value(record.clockNumber)}</span>
                                 </Descriptions.Item>
                                 <Descriptions.Item label={t("multiFormat.employee.fullName")}>
                                     {value(record.fullName)}
                                 </Descriptions.Item>
                                 <Descriptions.Item label={t("multiFormat.grid.netkey")}>
-                                    {value(record.netkey)}
+                                    <span>{value(record.netkey)}</span>
                                 </Descriptions.Item>
                             </Descriptions>
                         </Card>
@@ -403,12 +404,12 @@ export default function MultiFormatDetail({ id: idProp = null }) {
                                     {dateValue(record.submittedAt)}
                                 </Descriptions.Item>
                                 {isOwnRecord && (
-                                <Descriptions.Item label={t("multiFormat.grid.approver")}>
-                                    {value(record.approver?.name)}
-                                    {record.approver?.position
-                                        ? ` — ${record.approver.position}`
-                                        : ""}
-                                </Descriptions.Item>
+                                    <Descriptions.Item label={t("multiFormat.grid.approver")}>
+                                        {value(record.approver?.name)}
+                                        {record.approver?.position
+                                            ? ` — ${record.approver.position}`
+                                            : ""}
+                                    </Descriptions.Item>
                                 )}
 
                                 {record.decisionAt && (

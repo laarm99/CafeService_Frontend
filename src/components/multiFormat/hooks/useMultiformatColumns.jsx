@@ -14,6 +14,7 @@ const STATUS_COLORS = {
     REJECTED: 'red',
     IN_REVIEW: 'blue',
     PENDING: 'orange',
+    CANCELLED: 'gray',
 };
 
 export default function useMultiFormatColumns() {
